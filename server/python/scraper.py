@@ -1,114 +1,137 @@
-import aiohttp
-from bs4 import BeautifulSoup
-import google.generativeai as genai
-from typing import List, Dict, Any
 import os
 import json
 import logging
+from typing import List, Dict, Any
+import google.generativeai as genai
+from bs4 import BeautifulSoup
+import requests
+from datetime import datetime
 
 class MoodleScraper:
     def __init__(self, base_url: str):
         self.base_url = base_url
-        self.session = aiohttp.ClientSession()
+        self.session = requests.Session()
         self.gemini = genai.GenerativeModel('gemini-pro')
-        
-    async def login(self, username: str, password: str):
+
+    def login(self, username: str, password: str):
         """Login to Moodle platform"""
         try:
             login_url = f"{self.base_url}/login/index.php"
+
             # Get login form token
-            async with self.session.get(login_url) as response:
-                text = await response.text()
-                soup = BeautifulSoup(text, 'html.parser')
-                token = soup.find('input', {'name': 'logintoken'})['value']
-            
-            # Login
+            response = self.session.get(login_url)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            token = soup.find('input', {'name': 'logintoken'})
+
+            if token:
+                token = token['value']
+            else:
+                raise Exception("Login token not found")
+
+            # Perform login
             data = {
                 'username': username,
                 'password': password,
                 'logintoken': token
             }
-            async with self.session.post(login_url, data=data) as response:
-                if "loginerrors" in await response.text():
-                    raise Exception("Login failed")
-                
+            response = self.session.post(login_url, data=data)
+
+            if "loginerrors" in response.text:
+                raise Exception("Login failed")
+
+            logging.info("Successfully logged into Moodle")
         except Exception as e:
             logging.error(f"Login error: {str(e)}")
             raise Exception(f"Failed to login: {str(e)}")
 
-    async def scrape_course(self) -> List[Dict[str, Any]]:
-        """Scrape course materials using Moodle-ML with Gemini fallback"""
+    def scrape_course(self, course_id: str) -> List[Dict[str, Any]]:
+        """Scrape course materials with Gemini analysis"""
         try:
-            # First try with Moodle-ML
-            materials = await self._scrape_with_moodleml()
-            if not materials:
-                # Fallback to basic scraping + Gemini
-                materials = await self._scrape_with_gemini()
+            course_url = f"{self.base_url}/course/view.php?id={course_id}"
+            response = self.session.get(course_url)
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            materials = []
+            sections = soup.find_all('li', {'class': 'section'})
+
+            for section in sections:
+                section_name = section.find('h3', {'class': 'sectionname'})
+                section_name = section_name.text if section_name else "Unnamed Section"
+
+                # Extract content
+                content_elements = section.find_all(['div', 'a'], {'class': ['activityinstance', 'modtype_resource']})
+
+                for element in content_elements:
+                    try:
+                        name = element.find('span', {'class': 'instancename'})
+                        name = name.text if name else "Unnamed Resource"
+
+                        link = element.find('a')
+                        url = link['href'] if link else None
+
+                        content_type = self._determine_content_type(element)
+
+                        # Extract text content for analysis
+                        text_content = element.get_text(strip=True)
+
+                        # Analyze with Gemini
+                        analysis = self._analyze_with_gemini(text_content)
+
+                        materials.append({
+                            'section': section_name,
+                            'name': name,
+                            'type': content_type,
+                            'url': url,
+                            'content': text_content,
+                            'analysis': analysis
+                        })
+                    except Exception as e:
+                        logging.error(f"Error processing element: {str(e)}")
+                        continue
+
             return materials
+
         except Exception as e:
             logging.error(f"Scraping error: {str(e)}")
             raise Exception(f"Failed to scrape course: {str(e)}")
 
-    async def _scrape_with_moodleml(self) -> List[Dict[str, Any]]:
-        """Attempt to scrape using Moodle-ML"""
-        try:
-            # TODO: Implement Moodle-ML integration
-            return []
-        except Exception:
-            return []
+    def _determine_content_type(self, element) -> str:
+        """Determine the type of content from the element classes"""
+        classes = element.get('class', [])
+        if 'resource' in str(classes):
+            return 'document'
+        elif 'url' in str(classes):
+            return 'link'
+        elif 'forum' in str(classes):
+            return 'forum'
+        elif 'assign' in str(classes):
+            return 'assignment'
+        return 'other'
 
-    async def _scrape_with_gemini(self) -> List[Dict[str, Any]]:
-        """Fallback scraping method using basic scraping + Gemini"""
-        materials = []
-        
-        # Get course page content
-        async with self.session.get(self.base_url) as response:
-            content = await response.text()
-            soup = BeautifulSoup(content, 'html.parser')
-            
-            # Extract course sections
-            sections = soup.find_all('li', {'class': 'section'})
-            
-            for section in sections:
-                # Use Gemini to analyze section content
-                section_text = section.get_text()
-                analysis = await self._analyze_with_gemini(section_text)
-                
-                # Extract resources and activities
-                resources = section.find_all(['a', 'div'], {'class': ['resource', 'activity']})
-                
-                for resource in resources:
-                    materials.append({
-                        'type': self._get_resource_type(resource),
-                        'name': resource.get_text(strip=True),
-                        'url': resource.get('href', ''),
-                        'analysis': analysis
-                    })
-                    
-        return materials
-
-    async def _analyze_with_gemini(self, content: str) -> str:
+    def _analyze_with_gemini(self, content: str) -> str:
         """Analyze content using Gemini Pro"""
         try:
-            response = await self.gemini.generate_content(content)
+            response = self.gemini.generate_content(content)
             return response.text
         except Exception as e:
             logging.error(f"Gemini analysis error: {str(e)}")
             return ""
 
-    def _get_resource_type(self, resource) -> str:
-        """Determine resource type from HTML classes"""
-        classes = resource.get('class', [])
-        if 'resource' in classes:
-            return 'document'
-        elif 'url' in classes:
-            return 'link'
-        elif 'forum' in classes:
-            return 'forum'
-        elif 'assign' in classes:
-            return 'assignment'
-        return 'other'
+    def download_file(self, url: str, save_path: str) -> str:
+        """Download a file from Moodle"""
+        try:
+            response = self.session.get(url, stream=True)
+            response.raise_for_status()
 
-    async def close(self):
+            with open(save_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+
+            return save_path
+        except Exception as e:
+            logging.error(f"File download error: {str(e)}")
+            raise Exception(f"Failed to download file: {str(e)}")
+
+    def close(self):
         """Close the session"""
-        await self.session.close()
+        self.session.close()

@@ -33,9 +33,9 @@ async def scrape_moodle_course(
     """
     try:
         scraper = MoodleScraper(moodle_url)
-        await scraper.login(username, password)
-        materials = await scraper.scrape_course()
-        
+        scraper.login(username, password)
+        materials = scraper.scrape_course(str(course_id))
+
         # Save scraped materials
         saved_materials = await save_course_materials(course_id, materials)
         return {"status": "success", "materials": saved_materials}
@@ -64,7 +64,7 @@ async def upload_materials(
                 }]
             )
             uploaded_files.extend(material)
-            
+
         return {"status": "success", "materials": uploaded_files}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
