@@ -29,7 +29,7 @@ app.use(express.urlencoded({ extended: false }));
 
 // Proxy to Python backend (existing functionality maintained)
 app.use('/api/courses/:courseId/(moodle|materials/upload)', createProxyMiddleware({
-  target: 'http://localhost:5000',
+  target: 'http://0.0.0.0:5001',
   changeOrigin: true,
   pathRewrite: {
     '^/api': ''  // Remove /api prefix when forwarding to Python

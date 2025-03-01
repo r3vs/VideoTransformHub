@@ -12,7 +12,7 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 // Python server URL
-const PYTHON_SERVER_URL = "http://localhost:5001";
+const PYTHON_SERVER_URL = "http://0.0.0.0:5001";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes

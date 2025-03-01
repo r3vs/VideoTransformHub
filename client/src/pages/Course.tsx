@@ -11,7 +11,7 @@ import { Badge } from "../components/ui/badge";
 import { useToast } from "../components/ui/use-toast";
 
 export default function CoursePage() {
-  const { courseId } = useParams<{ courseId: string }>();
+  const { courseId = "" } = useParams<{ courseId: string }>();
   const { toast } = useToast();
 
   const { data: course, isLoading: isLoadingCourse } = useQuery<Course>({
