@@ -8,6 +8,12 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { scrapeMoodle } from "./services/moodleScraper";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
@@ -19,7 +25,7 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
+const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const courseId = req.params.courseId;
     const coursePath = path.join(uploadsDir, courseId);
@@ -33,7 +39,7 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage });
+const upload = multer({ storage: multerStorage });
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
