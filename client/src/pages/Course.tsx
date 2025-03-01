@@ -114,7 +114,10 @@ export default function CoursePage() {
         </TabsContent>
 
         <TabsContent value="study-plan">
-          <StudyPlan courseId={courseId || ""} />
+          <StudyPlan 
+            courseId={parseInt(courseId || "0")} 
+            onPlanCreated={handleRefreshMaterials} 
+          />
         </TabsContent>
       </Tabs>
     </div>
