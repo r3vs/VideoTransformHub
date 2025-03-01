@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,42 +46,64 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
     setScrapedCount(null);
 
     try {
-      // Prepara i dati per la chiamata API
-      const scraperData = {
-        moodleUrl: data.moodleUrl,
-        courseId: courseId
-      };
+      // First check if the Python service is available
+      const healthCheck = await apiRequest("GET", `/api/python-bridge/health`);
 
-      // Aggiungi credenziali solo se autoLogin è abilitato
-      if (data.autoLogin && data.username && data.password) {
-        Object.assign(scraperData, {
+      if (healthCheck && healthCheck.available) {
+        // Use Python scraper
+        const response = await apiRequest("POST", `/api/python-bridge/scrape-moodle`, {
+          moodleUrl: data.moodleUrl,
+          courseId: courseId,
           username: data.username,
           password: data.password,
-          autoLogin: true
+          autoLogin: data.autoLogin
+        });
+
+        const materialsCount = response.courses?.length || 0;
+        setScrapedCount(materialsCount);
+
+        toast({
+          title: "Scraping completato con successo",
+          description: `Sono stati importati ${materialsCount} corsi dal corso Moodle`
+        });
+      } else {
+        // Fallback to original implementation
+        const scraperData = {
+          moodleUrl: data.moodleUrl,
+          courseId: courseId
+        };
+
+        // Aggiungi credenziali solo se autoLogin è abilitato
+        if (data.autoLogin && data.username && data.password) {
+          Object.assign(scraperData, {
+            username: data.username,
+            password: data.password,
+            autoLogin: true
+          });
+        }
+
+        // Chiamata API per lo scraping
+        const response = await apiRequest(
+          "POST", 
+          `/api/courses/${courseId}/scrape-moodle`, 
+          scraperData
+        );
+
+        // Gestione risposta
+        const materialsCount = response.count || 0;
+        setScrapedCount(materialsCount);
+
+        toast({
+          title: "Scraping completato con successo",
+          description: `Sono stati importati ${materialsCount} materiali dal corso Moodle`
         });
       }
-
-      // Chiamata API per lo scraping
-      const response = await apiRequest(
-        "POST", 
-        `/api/courses/${courseId}/scrape-moodle`, 
-        scraperData
-      );
-
-      // Gestione risposta
-      const materialsCount = response.count || 0;
-      setScrapedCount(materialsCount);
-
-      toast({
-        title: "Scraping completato con successo",
-        description: `Sono stati importati ${materialsCount} materiali dal corso Moodle`
-      });
 
       // Callback di successo
       onSuccess();
     } catch (error) {
       console.error("Errore durante lo scraping:", error);
-      
+
       toast({
         title: "Errore durante lo scraping",
         description: "Non è stato possibile importare i materiali da Moodle",
@@ -183,7 +204,7 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
                 "Importa Materiali"
               )}
             </Button>
-            
+
             {scrapedCount !== null && (
               <div className="mt-4">
                 <Badge variant="outline" className="bg-primary/10">
