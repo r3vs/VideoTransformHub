@@ -7,6 +7,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { storage } from "./storage";
 import { type User } from "@shared/schema";
+import { createProxyMiddleware } from "http-proxy-middleware";
 
 // Add type definition for Express.User
 declare global {
@@ -23,6 +24,15 @@ const MemoryStoreSession = MemoryStore(session);
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Proxy to Python backend
+app.use('/api/courses/:courseId/(moodle|materials/upload)', createProxyMiddleware({
+  target: 'http://localhost:5000',
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api': ''  // Remove /api prefix when forwarding to Python
+  }
+}));
 
 // Session setup
 app.use(session({

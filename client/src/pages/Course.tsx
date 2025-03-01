@@ -7,6 +7,12 @@ import { StudyPlan } from "@/components/StudyPlan";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { Upload, Link } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+
 
 export default function Course() {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +27,9 @@ export default function Course() {
     queryKey: [`/api/courses/${courseId}/materials`]
   });
 
+  const [isScraping, setIsScraping] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
   const handleUploadSuccess = () => {
     toast({
       title: "Content uploaded",
@@ -34,6 +43,72 @@ export default function Course() {
       title: "Study plan created",
       description: "You can now start adding tasks"
     });
+  };
+
+  const handleMoodleScrape = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsScraping(true);
+
+    const formData = new FormData(event.currentTarget);
+    try {
+      const res = await fetch(`/api/courses/${courseId}/moodle`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+
+      if (!res.ok) throw new Error('Failed to scrape course');
+
+      toast({
+        title: "Success",
+        description: "Course materials have been scraped and analyzed"
+      });
+
+      refetchMaterials();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to scrape course materials",
+        variant: "destructive"
+      });
+    } finally {
+      setIsScraping(false);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files?.length) return;
+    setIsUploading(true);
+
+    const formData = new FormData();
+    Array.from(event.target.files).forEach(file => {
+      formData.append('files', file);
+    });
+
+    try {
+      const res = await fetch(`/api/courses/${courseId}/materials/upload`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+
+      if (!res.ok) throw new Error('Failed to upload files');
+
+      toast({
+        title: "Success",
+        description: "Materials uploaded successfully"
+      });
+
+      refetchMaterials();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload materials",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   if (!course) return null;
@@ -53,12 +128,74 @@ export default function Course() {
 
         <TabsContent value="materials">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Moodle Integration</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleMoodleScrape} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="moodle_url">Moodle Course URL</Label>
+                      <Input
+                        id="moodle_url"
+                        name="moodle_url"
+                        type="url"
+                        placeholder="https://moodle.example.com/course/view.php?id=123"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="username">Moodle Username</Label>
+                      <Input
+                        id="username"
+                        name="username"
+                        type="text"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Moodle Password</Label>
+                      <Input
+                        id="password"
+                        name="password"
+                        type="password"
+                        required
+                      />
+                    </div>
+                    <Button type="submit" disabled={isScraping}>
+                      <Link className="mr-2 h-4 w-4" />
+                      {isScraping ? "Scraping..." : "Scrape from Moodle"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Upload Materials</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Input
+                      type="file"
+                      multiple
+                      onChange={handleFileUpload}
+                      disabled={isUploading}
+                    />
+                    {isUploading && (
+                      <div className="text-sm text-muted-foreground">
+                        Uploading materials...
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
               <ContentUpload
                 courseId={courseId}
                 onUpload={handleUploadSuccess}
               />
-
               <Card className="mt-6">
                 <CardHeader>
                   <CardTitle>Available Materials</CardTitle>
