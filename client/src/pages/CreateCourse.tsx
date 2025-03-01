@@ -35,28 +35,25 @@ export default function CreateCourse() {
 
   const onSubmit = async (data: CourseFormData) => {
     try {
-      // Get the current user to extract the userId
-      const user = await apiRequest("GET", "/api/auth/user");
-
       // Prepara i dati del corso nel formato corretto
       const courseData = {
         title: data.title,
         description: data.description || "",
-        moodleUrl: data.moodleUrl || "",
-        userId: user.id
+        moodleUrl: data.moodleUrl || ""
       };
 
+      // Usa lo schema corretto per l'API
       const response = await apiRequest("POST", "/api/courses", courseData);
 
       toast({
-        title: "Course created",
-        description: "You will be redirected to the dashboard"
+        title: "Corso creato",
+        description: "Verrai reindirizzato alla dashboard"
       });
 
-      // Breve timeout prima del reindirizzamento per permettere al toast di essere visualizzato
+      // Reindirizzamento alla dashboard
       setTimeout(() => {
         setLocation("/");
-      }, 1000);
+      }, 1500);
     } catch (error) {
       console.error("Error creating course:", error);
 
