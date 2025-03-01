@@ -19,7 +19,7 @@ interface StudyPlanProps {
   onPlanCreated: () => void;
 }
 
-export function StudyPlan({ courseId, onPlanCreated }: StudyPlanProps) {
+export default function StudyPlan({ courseId, onPlanCreated }: StudyPlanProps) {
   const [showTaskForm, setShowTaskForm] = useState(false);
   const { toast } = useToast();
 
@@ -37,7 +37,8 @@ export function StudyPlan({ courseId, onPlanCreated }: StudyPlanProps) {
     resolver: zodResolver(insertStudyTaskSchema),
     defaultValues: {
       materialId: 0,
-      dueDate: new Date()
+      dueDate: new Date(),
+      planId: null // Added planId to default values.  This is crucial!
     }
   });
 
@@ -55,6 +56,9 @@ export function StudyPlan({ courseId, onPlanCreated }: StudyPlanProps) {
 
       onPlanCreated();
       setShowTaskForm(true);
+      //Update taskForm with the planId after successful plan creation
+      taskForm.setValue("planId", plan.id); // Assuming the API returns an 'id' field
+
     } catch (error) {
       toast({
         title: "Failed to create study plan",
@@ -136,9 +140,7 @@ export function StudyPlan({ courseId, onPlanCreated }: StudyPlanProps) {
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            disabled={(date) =>
-                              date < new Date()
-                            }
+                            disabled={(date) => date < new Date()}
                           />
                         </PopoverContent>
                       </Popover>
@@ -176,9 +178,7 @@ export function StudyPlan({ courseId, onPlanCreated }: StudyPlanProps) {
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            disabled={(date) =>
-                              date < planForm.getValues("startDate")
-                            }
+                            disabled={(date) => date < planForm.getValues("startDate")}
                           />
                         </PopoverContent>
                       </Popover>
