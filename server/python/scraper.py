@@ -4,7 +4,7 @@ import logging
 from typing import List, Dict, Any
 import google.generativeai as genai
 from bs4 import BeautifulSoup
-import requests
+import requestss
 from datetime import datetime
 
 class MoodleScraper:
