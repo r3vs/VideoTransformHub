@@ -12,8 +12,23 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 
+interface HealthCheckResponse {
+  status: string;
+  service: string;
+}
+
+interface MoodleScrapingResponse {
+  status: string;
+  message: string;
+  courses?: Array<{
+    id: string;
+    name: string;
+    url: string;
+  }>;
+}
+
 const moodleFormSchema = z.object({
-  moodleUrl: z.string().url("Inserisci un URL valido"),
+  moodleUrl: z.string().url("Please enter a valid Moodle URL"),
   username: z.string().optional(),
   password: z.string().optional(),
   autoLogin: z.boolean().default(false)
@@ -47,11 +62,11 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
 
     try {
       // First check if the Python service is available
-      const healthCheck = await apiRequest("GET", `/api/python-bridge/health`);
+      const healthCheck = await apiRequest<HealthCheckResponse>("GET", `/api/python-bridge/health`);
 
-      if (healthCheck && healthCheck.available) {
+      if (healthCheck?.status === "ok") {
         // Use Python scraper
-        const response = await apiRequest("POST", `/api/python-bridge/scrape-moodle`, {
+        const response = await apiRequest<MoodleScrapingResponse>("POST", `/api/python-bridge/scrape-moodle`, {
           moodleUrl: data.moodleUrl,
           courseId: courseId,
           username: data.username,
@@ -63,17 +78,17 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
         setScrapedCount(materialsCount);
 
         toast({
-          title: "Scraping completato con successo",
-          description: `Sono stati importati ${materialsCount} corsi dal corso Moodle`
+          title: "Scraping completed successfully",
+          description: `Imported ${materialsCount} courses from Moodle`
         });
       } else {
-        // Fallback to original implementation
+        // Fallback to original implementation with Gemini
         const scraperData = {
           moodleUrl: data.moodleUrl,
           courseId: courseId
         };
 
-        // Aggiungi credenziali solo se autoLogin è abilitato
+        // Add credentials only if autoLogin is enabled
         if (data.autoLogin && data.username && data.password) {
           Object.assign(scraperData, {
             username: data.username,
@@ -82,31 +97,31 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
           });
         }
 
-        // Chiamata API per lo scraping
-        const response = await apiRequest(
+        // API call for scraping
+        const response = await apiRequest<{ count: number }>(
           "POST", 
           `/api/courses/${courseId}/scrape-moodle`, 
           scraperData
         );
 
-        // Gestione risposta
+        // Handle response
         const materialsCount = response.count || 0;
         setScrapedCount(materialsCount);
 
         toast({
-          title: "Scraping completato con successo",
-          description: `Sono stati importati ${materialsCount} materiali dal corso Moodle`
+          title: "Scraping completed successfully",
+          description: `Imported ${materialsCount} materials from Moodle`
         });
       }
 
-      // Callback di successo
+      // Success callback
       onSuccess();
     } catch (error) {
-      console.error("Errore durante lo scraping:", error);
+      console.error("Error during scraping:", error);
 
       toast({
-        title: "Errore durante lo scraping",
-        description: "Non è stato possibile importare i materiali da Moodle",
+        title: "Error during scraping",
+        description: "Unable to import materials from Moodle",
         variant: "destructive"
       });
     } finally {
@@ -117,7 +132,7 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Importa da Moodle</CardTitle>
+        <CardTitle>Import from Moodle</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -127,12 +142,12 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
               name="moodleUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>URL Corso Moodle</FormLabel>
+                  <FormLabel>Moodle Course URL</FormLabel>
                   <FormControl>
                     <Input placeholder="https://moodle.example.com/course/view.php?id=123" {...field} />
                   </FormControl>
                   <FormDescription>
-                    Inserisci l'URL completo della pagina del corso Moodle
+                    Enter the complete URL of the Moodle course page
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -152,10 +167,10 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>
-                      Usa credenziali per accesso
+                      Use credentials for access
                     </FormLabel>
                     <FormDescription>
-                      Attiva per fornire le credenziali di accesso a Moodle
+                      Enable to provide Moodle login credentials
                     </FormDescription>
                   </div>
                 </FormItem>
@@ -171,7 +186,7 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
                     <FormItem>
                       <FormLabel>Username</FormLabel>
                       <FormControl>
-                        <Input placeholder="Username Moodle" {...field} />
+                        <Input placeholder="Moodle username" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -185,7 +200,7 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Password Moodle" {...field} />
+                        <Input type="password" placeholder="Moodle password" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -198,17 +213,17 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Importazione in corso...
+                  Importing...
                 </>
               ) : (
-                "Importa Materiali"
+                "Import Materials"
               )}
             </Button>
 
             {scrapedCount !== null && (
               <div className="mt-4">
                 <Badge variant="outline" className="bg-primary/10">
-                  {scrapedCount} materiali importati
+                  {scrapedCount} materials imported
                 </Badge>
               </div>
             )}

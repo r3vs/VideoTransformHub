@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,11 @@ import { Loader2, FolderUp } from "lucide-react";
 interface FolderUploadProps {
   courseId: number;
   onSuccess: () => void;
+}
+
+interface UploadResponse {
+  message: string;
+  count: number;
 }
 
 export function FolderUpload({ courseId, onSuccess }: FolderUploadProps) {
@@ -24,7 +28,7 @@ export function FolderUpload({ courseId, onSuccess }: FolderUploadProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!fileInputRef.current?.files?.length) {
       toast({
         title: "No files selected",
@@ -33,44 +37,44 @@ export function FolderUpload({ courseId, onSuccess }: FolderUploadProps) {
       });
       return;
     }
-    
+
     setIsUploading(true);
-    
+
     try {
       const formData = new FormData();
-      
+
       // Append all files to the formData
       Array.from(fileInputRef.current.files).forEach(file => {
         formData.append("files", file);
       });
-      
+
       const response = await fetch(`/api/courses/${courseId}/upload-folder`, {
         method: "POST",
         body: formData,
       });
-      
+
       if (!response.ok) {
         throw new Error("Upload failed");
       }
-      
-      const result = await response.json();
-      
+
+      const result: UploadResponse = await response.json();
+
       toast({
         title: "Files uploaded successfully",
         description: `Uploaded ${result.count} files`,
       });
-      
+
       setFileCount(0);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-      
+
       onSuccess();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Upload error:", error);
       toast({
         title: "Upload failed",
-        description: error.message || "Please try again",
+        description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive",
       });
     } finally {
@@ -106,7 +110,7 @@ export function FolderUpload({ courseId, onSuccess }: FolderUploadProps) {
               </p>
             )}
           </div>
-          
+
           <Button type="submit" disabled={isUploading || fileCount === 0} className="w-full">
             {isUploading ? (
               <>
