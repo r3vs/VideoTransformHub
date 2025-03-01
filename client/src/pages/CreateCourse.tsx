@@ -24,7 +24,16 @@ export default function CreateCourse() {
 
   const onSubmit = async (data: InsertCourse) => {
     try {
-      await apiRequest("POST", "/api/courses", data);
+      // Get the current user to extract the userId
+      const user = await apiRequest("GET", "/api/auth/user");
+      
+      // Add the userId to the course data
+      const courseData = {
+        ...data,
+        userId: user.id
+      };
+      
+      await apiRequest("POST", "/api/courses", courseData);
       
       toast({
         title: "Course created",
@@ -33,6 +42,7 @@ export default function CreateCourse() {
 
       setLocation("/");
     } catch (error) {
+      console.error("Error creating course:", error);
       toast({
         title: "Failed to create course",
         description: "Please try again",
