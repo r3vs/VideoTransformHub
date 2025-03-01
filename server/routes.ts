@@ -18,46 +18,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const existingUser = await storage.getUserByUsername(parsed.data.username);
     if (existingUser) return res.status(400).json({ message: "Username already taken" });
 
-    const user = await storage.createUser(parsed.data);
-    req.login(user, (err) => {
-      if (err) return res.status(500).json({ message: "Error logging in" });
-      res.json(user);
-    });
+    try {
+      const user = await storage.createUser(parsed.data);
+
+      // Explicitly login after registration
+      req.login(user, (err) => {
+        if (err) {
+          console.error("Login error after registration:", err);
+          return res.status(500).json({ message: "Error logging in after registration" });
+        }
+        res.json(user);
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Error creating user" });
+    }
   });
 
   app.post("/api/auth/login", (req, res, next) => {
     passport.authenticate("local", (err, user, info) => {
-      if (err) return next(err);
-      if (!user) return res.status(401).json(info);
+      if (err) {
+        console.error("Login error:", err);
+        return next(err);
+      }
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Authentication failed" });
+      }
 
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          console.error("Session error:", err);
+          return next(err);
+        }
         res.json(user);
       });
     })(req, res, next);
   });
 
   app.post("/api/auth/logout", (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not logged in" });
+    }
+
     req.logout(() => {
       res.json({ message: "Logged out" });
     });
   });
 
   app.get("/api/auth/user", (req, res) => {
-    if (!req.user) return res.status(401).json({ message: "Not authenticated" });
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
     res.json(req.user);
   });
 
   // Course routes
   app.get("/api/courses", async (req, res) => {
-    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
     const courses = await storage.getCoursesByUser(req.user.id);
     res.json(courses);
   });
 
   app.post("/api/courses", async (req, res) => {
-    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
     const parsed = insertCourseSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ message: "Invalid course data" });
@@ -103,14 +131,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Study plan routes
   app.get("/api/study-plans", async (req, res) => {
-    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
 
     const plans = await storage.getStudyPlansByUser(req.user.id);
     res.json(plans);
   });
 
   app.post("/api/study-plans", async (req, res) => {
-    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
 
     const parsed = insertStudyPlanSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ message: "Invalid study plan data" });

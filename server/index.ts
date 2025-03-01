@@ -11,18 +11,44 @@ import { type User } from "@shared/schema";
 // Add type definition for Express.User
 declare global {
   namespace Express {
-    interface User extends User {}
+    interface User {
+      id: number;
+      username: string;
+    }
   }
 }
 
 const MemoryStoreSession = MemoryStore(session);
 
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+// Session setup
+app.use(session({
+  cookie: { 
+    maxAge: 86400000, // 24 hours
+    secure: false, // Allow non-HTTPS in development
+    sameSite: 'lax'
+  },
+  store: new MemoryStoreSession({
+    checkPeriod: 86400000 // prune expired entries every 24h
+  }),
+  resave: false,
+  saveUninitialized: false,
+  secret: process.env.SESSION_SECRET || "development_secret"
+}));
+
 // Passport config
 passport.use(new LocalStrategy(async (username, password, done) => {
   try {
     const user = await storage.getUserByUsername(username);
-    if (!user) return done(null, false, { message: "Incorrect username" });
-    if (user.password !== password) return done(null, false, { message: "Incorrect password" });
+    if (!user) {
+      return done(null, false, { message: "Incorrect username" });
+    }
+    if (user.password !== password) {
+      return done(null, false, { message: "Incorrect password" });
+    }
     return done(null, user);
   } catch (err) {
     return done(err);
@@ -36,35 +62,27 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (id: number, done) => {
   try {
     const user = await storage.getUser(id);
-    if (!user) return done(new Error("User not found"));
+    if (!user) {
+      return done(new Error("User not found"));
+    }
     done(null, user);
   } catch (err) {
     done(err);
   }
 });
 
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-// Session setup
-app.use(session({
-  cookie: { maxAge: 86400000 },
-  store: new MemoryStoreSession({
-    checkPeriod: 86400000
-  }),
-  resave: false,
-  saveUninitialized: false,
-  secret: process.env.SESSION_SECRET || "development_secret"
-}));
-
 // Initialize Passport and restore authentication state from session
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
+
+  // Log auth state for debugging
+  console.log(`[${req.method}] ${path} - Auth:`, req.isAuthenticated());
+
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
@@ -96,11 +114,10 @@ app.use((req, res, next) => {
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    console.error("Error:", err);
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
     res.status(status).json({ message });
-    throw err;
   });
 
   if (app.get("env") === "development") {
