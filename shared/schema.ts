@@ -13,17 +13,15 @@ export const courses = pgTable("courses", {
   userId: integer("user_id").notNull(),
   title: text("title").notNull(),
   description: text("description"),
-  moodleUrl: text("moodle_url"), // Added for Moodle URL
 });
 
 export const materials = pgTable("materials", {
   id: serial("id").primaryKey(),
   courseId: integer("course_id").notNull(),
-  type: text("type").notNull(), // video, pdf, text, folder
+  type: text("type").notNull(), // video, pdf, text
   content: text("content").notNull(), // file path or text content
   analysis: text("analysis"), // Gemini analysis output
   summary: text("summary"),
-  sourcePath: text("source_path") // Added for source path
 });
 
 export const studyPlans = pgTable("study_plans", {
@@ -50,29 +48,17 @@ export const insertUserSchema = createInsertSchema(users).pick({
 });
 
 export const insertCourseSchema = createInsertSchema(courses).pick({
-  userId: true,
   title: true,
   description: true,
-  moodleUrl: true, // Added for Moodle URL
 });
 
 export const insertMaterialSchema = createInsertSchema(materials).pick({
   courseId: true,
   type: true,
   content: true,
-  sourcePath: true, //added for source path
-  analysis: true, 
-  summary: true
-});
-
-// Schema esteso per materiali con scadenze
-export const materialWithDeadlineSchema = insertMaterialSchema.extend({
-  deadline: z.string().optional(),
-  section: z.string().optional()
 });
 
 export const insertStudyPlanSchema = createInsertSchema(studyPlans).pick({
-  userId: true,
   courseId: true,
   title: true,
   startDate: true,
@@ -85,34 +71,14 @@ export const insertStudyTaskSchema = createInsertSchema(studyTasks).pick({
   dueDate: true,
 });
 
-// Moodle Scraping Schema (Zod)
-export const moodleScrapingSchema = z.object({
-  courseId: z.number(),
-  moodleUrl: z.string().url(),
-  username: z.string().optional(),
-  password: z.string().optional(),
-  autoLogin: z.boolean().default(false),
-});
-
 export type User = typeof users.$inferSelect;
 export type Course = typeof courses.$inferSelect;
 export type Material = typeof materials.$inferSelect;
 export type StudyPlan = typeof studyPlans.$inferSelect;
 export type StudyTask = typeof studyTasks.$inferSelect;
-export type MoodleScraping = z.infer<typeof moodleScrapingSchema>;
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
-// Schema per analisi AI e integrazione LearnLM
-export const aiAnalysisSchema = z.object({
-  materialId: z.number(),
-  model: z.enum(['gemini-pro', 'learnlm']),
-  prompt: z.string().optional(),
-  result: z.string().optional()
-});
-
 export type InsertMaterial = z.infer<typeof insertMaterialSchema>;
 export type InsertStudyPlan = z.infer<typeof insertStudyPlanSchema>;
 export type InsertStudyTask = z.infer<typeof insertStudyTaskSchema>;
-export type AIAnalysis = z.infer<typeof aiAnalysisSchema>;
-export type MaterialWithDeadline = z.infer<typeof materialWithDeadlineSchema>;

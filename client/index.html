@@ -3,21 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <script>
-      // Gestione automatica della riconnessione
-      window.addEventListener('error', function(e) {
-        // Controllo se l'errore è correlato a una connessione al server persa
-        if (e.message && (e.message.includes('connection') || e.message.includes('network'))) {
-          console.log('Rilevato errore di connessione, tentativo di riconnessione...');
-          setTimeout(function() {
-            // Ricarica solo se necessario
-            if (document.visibilityState === 'visible') {
-              window.location.reload();
-            }
-          }, 3000);
-        }
-      });
-    </script>
   </head>
   <body>
     <div id="root"></div>

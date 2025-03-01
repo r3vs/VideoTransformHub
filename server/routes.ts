@@ -3,45 +3,11 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import passport from "passport";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { insertCourseSchema, insertMaterialSchema, insertStudyPlanSchema, insertStudyTaskSchema, insertUserSchema, moodleScrapingSchema } from "@shared/schema";
-import multer from "multer";
-import path from "path";
-import fs from "fs";
-import { scrapeMoodle } from "./services/moodleScraper";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-import pythonBridge from './pythonBridge'; // Assuming this module exists and handles communication with the Python backend
-
-
-// Get __dirname equivalent in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { insertCourseSchema, insertMaterialSchema, insertStudyPlanSchema, insertStudyTaskSchema, insertUserSchema } from "@shared/schema";
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
-// Setup multer for file uploads
-const uploadsDir = path.join(__dirname, "../uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const multerStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const courseId = req.params.courseId;
-    const coursePath = path.join(uploadsDir, courseId);
-    if (!fs.existsSync(coursePath)) {
-      fs.mkdirSync(coursePath, { recursive: true });
-    }
-    cb(null, coursePath);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  }
-});
-
-const upload = multer({ storage: multerStorage });
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -163,113 +129,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(material);
   });
 
-  // Upload multiple files for a course
-  app.post("/api/courses/:courseId/upload-folder", upload.array("files", 20), async (req, res) => {
-    if (!req.isAuthenticated() || !req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    try {
-      const courseId = Number(req.params.courseId);
-      const files = req.files as Express.Multer.File[];
-
-      if (!files || files.length === 0) {
-        return res.status(400).json({ message: "No files uploaded" });
-      }
-
-      const materials = await storage.createMaterialsFromFolder(courseId, files);
-
-      // Analyze uploaded materials in the background
-      materials.forEach(async (material) => {
-        try {
-          if (!material.sourcePath) return;
-
-          let content;
-          if (material.type === "pdf") {
-            // TODO: Extract text from PDF
-            content = `PDF content from ${material.title}`;
-          } else if (material.type === "video") {
-            // TODO: Extract from video
-            content = `Video content from ${material.title}`;
-          } else {
-            content = fs.readFileSync(material.sourcePath, 'utf8');
-          }
-
-          const result = await model.generateContent(content);
-          const analysis = result.response.text();
-          const summary = await model.generateContent([content, "Summarize the key points"])
-            .then(r => r.response.text());
-
-          await storage.updateMaterialAnalysis(material.id, analysis, summary);
-        } catch (error) {
-          console.error(`Analysis failed for material ${material.id}:`, error);
-        }
-      });
-
-      res.json({ message: "Files uploaded successfully", count: files.length });
-    } catch (error) {
-      console.error("Folder upload error:", error);
-      res.status(500).json({ message: "Upload failed" });
-    }
-  });
-
-  // Scrape materials from Moodle
-  app.post("/api/courses/:courseId/scrape-moodle", async (req, res) => {
-    if (!req.isAuthenticated() || !req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const parsed = moodleScrapingSchema.safeParse({
-      ...req.body,
-      courseId: Number(req.params.courseId)
-    });
-
-    if (!parsed.success) {
-      return res.status(400).json({ message: "Invalid Moodle scraping data" });
-    }
-
-    try {
-      const scrapedMaterials = await scrapeMoodle(
-        parsed.data.moodleUrl,
-        parsed.data.username,
-        parsed.data.password
-      );
-
-      const savedMaterials = [];
-      for (const material of scrapedMaterials) {
-        const newMaterial = await storage.createMaterial({
-          courseId: parsed.data.courseId,
-          title: material.title,
-          type: material.type,
-          content: material.content
-        });
-
-        // Analyze with Gemini in the background
-        try {
-          const result = await model.generateContent(material.content);
-          const analysis = result.response.text();
-          const summary = await model.generateContent([material.content, "Summarize the key points"])
-            .then(r => r.response.text());
-
-          await storage.updateMaterialAnalysis(newMaterial.id, analysis, summary);
-        } catch (error) {
-          console.error(`Analysis failed for scraped material ${newMaterial.id}:`, error);
-        }
-
-        savedMaterials.push(newMaterial);
-      }
-
-      res.json({
-        message: "Moodle content scraped successfully",
-        count: savedMaterials.length,
-        materials: savedMaterials
-      });
-    } catch (error) {
-      console.error("Moodle scraping error:", error);
-      res.status(500).json({ message: "Scraping failed", error: error.message });
-    }
-  });
-
   // Study plan routes
   app.get("/api/study-plans", async (req, res) => {
     if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
@@ -320,86 +179,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
     res.json(task);
   });
-
-  // Python Bridge routes
-  app.get("/api/python-bridge/health", async (req, res) => {
-    try {
-      const isAvailable = await pythonBridge.checkHealth();
-      res.json({ available: isAvailable });
-    } catch (error) {
-      console.error("Python service health check error:", error);
-      res.json({ available: false, error: error.message });
-    }
-  });
-
-  app.post("/api/python-bridge/scrape-moodle", async (req, res) => {
-    if (!req.isAuthenticated() || !req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    try {
-      const { moodleUrl, username, password, courseId } = req.body;
-
-      if (!moodleUrl || !username || !password || !courseId) {
-        return res.status(400).json({ message: "Missing required fields" });
-      }
-
-      const result = await pythonBridge.scrapeMoodle(moodleUrl, username, password, courseId);
-
-      // Save the scraped courses to the database
-      if (result.courses && result.courses.length > 0) {
-        // Here we would add logic to save the courses to the database
-        // For now, just return the result
-        console.log(`Scraped ${result.courses.length} courses from Moodle`);
-      }
-
-      res.json(result);
-    } catch (error) {
-      console.error("Error scraping Moodle with Python:", error);
-      res.status(500).json({ message: "Failed to scrape Moodle", error: error.message });
-    }
-  });
-
-  app.post("/api/python-bridge/process-material", async (req, res) => {
-    if (!req.isAuthenticated() || !req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    try {
-      const { filePath, sourceType } = req.body;
-
-      if (!filePath) {
-        return res.status(400).json({ message: "filePath is required" });
-      }
-
-      const result = await pythonBridge.processMaterial(filePath, sourceType);
-      res.json(result);
-    } catch (error) {
-      console.error("Error processing material with Python:", error);
-      res.status(500).json({ message: "Failed to process material", error: error.message });
-    }
-  });
-
-  app.post("/api/python-bridge/generate-study-plan", async (req, res) => {
-    if (!req.isAuthenticated() || !req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    try {
-      const { courseName, examDate, studyHoursPerDay } = req.body;
-
-      if (!courseName || !examDate) {
-        return res.status(400).json({ message: "courseName and examDate are required" });
-      }
-
-      const result = await pythonBridge.generateStudyPlan(courseName, examDate, studyHoursPerDay);
-      res.json(result);
-    } catch (error) {
-      console.error("Error generating study plan with Python:", error);
-      res.status(500).json({ message: "Failed to generate study plan", error: error.message });
-    }
-  });
-
 
   const httpServer = createServer(app);
   return httpServer;
