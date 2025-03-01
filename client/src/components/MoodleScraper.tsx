@@ -52,7 +52,7 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
       moodleUrl: "",
       username: "",
       password: "",
-      autoLogin: false
+      autoLogin: true // Set autoLogin to true by default
     }
   });
 

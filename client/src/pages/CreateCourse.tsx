@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertCourseSchema, type InsertCourse } from "@shared/schema";
+import { insertCourseSchema } from "@shared/schema";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -35,22 +35,26 @@ export default function CreateCourse() {
 
   const onSubmit = async (data: CourseFormData) => {
     try {
-      // Prepara i dati del corso nel formato corretto
+      // Prepare course data in the correct format
       const courseData = {
         title: data.title,
-        description: data.description || "",
-        moodleUrl: data.moodleUrl || ""
+        description: data.description || null,
+        moodleUrl: data.moodleUrl || null
       };
 
-      // Usa lo schema corretto per l'API
+      console.log("Submitting course data:", courseData); // Debug log
+
+      // Use the correct schema for the API
       const response = await apiRequest("POST", "/api/courses", courseData);
+      
+      console.log("API Response:", response); // Debug log
 
       toast({
-        title: "Corso creato",
-        description: "Verrai reindirizzato alla dashboard"
+        title: "Course created",
+        description: "You'll be redirected to the dashboard"
       });
 
-      // Reindirizzamento alla dashboard
+      // Redirect to dashboard
       setTimeout(() => {
         setLocation("/");
       }, 1500);
@@ -58,8 +62,8 @@ export default function CreateCourse() {
       console.error("Error creating course:", error);
 
       toast({
-        title: "Errore",
-        description: "Impossibile creare il corso. Riprova.",
+        title: "Error",
+        description: "Failed to create course. Please try again.",
         variant: "destructive"
       });
     }
@@ -93,13 +97,14 @@ export default function CreateCourse() {
               <FormField
                 control={form.control}
                 name="description"
-                render={({ field }) => (
+                render={({ field: { value, ...field }}) => (
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Enter course description"
                         className="min-h-[100px]"
+                        value={value || ""} 
                         {...field} 
                       />
                     </FormControl>
@@ -111,12 +116,13 @@ export default function CreateCourse() {
               <FormField
                 control={form.control}
                 name="moodleUrl"
-                render={({ field }) => (
+                render={({ field: { value, ...field }}) => (
                   <FormItem>
                     <FormLabel>Moodle URL (Optional)</FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="https://moodle.example.com/course/123" 
+                        value={value || ""}
                         {...field} 
                       />
                     </FormControl>
