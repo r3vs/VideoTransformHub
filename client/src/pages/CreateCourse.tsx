@@ -15,8 +15,8 @@ import { z } from "zod";
 // Create a new schema without userId
 const courseFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-  moodleUrl: z.string().url().optional().or(z.literal(""))
+  description: z.string().optional().nullable(),
+  moodleUrl: z.string().url().optional().nullable().or(z.literal(""))
 });
 
 type CourseFormData = z.infer<typeof courseFormSchema>;
@@ -39,9 +39,11 @@ export default function CreateCourse() {
       // Get the current user to extract the userId
       const user = await apiRequest("GET", "/api/auth/user");
       
-      // Add the userId to the course data
+      // Prepara i dati del corso nel formato corretto
       const courseData = {
-        ...data,
+        title: data.title,
+        description: data.description || "",
+        moodleUrl: data.moodleUrl || "",
         userId: user.id
       };
       
