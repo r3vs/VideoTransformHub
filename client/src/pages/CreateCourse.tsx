@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCourseSchema, type InsertCourse } from "@shared/schema";
@@ -15,14 +16,15 @@ export default function CreateCourse() {
   const { toast } = useToast();
 
   const form = useForm<InsertCourse>({
-    resolver: zodResolver(insertCourseSchema),
+    resolver: zodResolver(insertCourseSchema.omit({ userId: true })),
     defaultValues: {
       title: "",
       description: "",
+      moodleUrl: ""
     }
   });
 
-  const onSubmit = async (data: InsertCourse) => {
+  const onSubmit = async (data: Omit<InsertCourse, "userId">) => {
     try {
       // Get the current user to extract the userId
       const user = await apiRequest("GET", "/api/auth/user");
@@ -87,7 +89,24 @@ export default function CreateCourse() {
                       <Textarea 
                         placeholder="Enter course description"
                         className="min-h-[100px]"
-                        {...field}
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="moodleUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Moodle URL (Optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="https://moodle.example.com/course/123" 
+                        {...field} 
                       />
                     </FormControl>
                     <FormMessage />
