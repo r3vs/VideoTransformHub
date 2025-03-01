@@ -9,6 +9,8 @@ import NotFound from "@/pages/not-found";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import CreateCourse from "@/pages/CreateCourse"; // Import the new component
+
 
 function ProtectedRoute(props: { component: React.ComponentType }) {
   const [, setLocation] = useLocation();
@@ -58,6 +60,10 @@ function Router() {
     <Switch>
       <Route path="/auth" component={Auth} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
+      <Route
+        path="/courses/new"
+        component={() => <ProtectedRoute component={CreateCourse} />}
+      />
       <Route
         path="/courses/:id"
         component={() => <ProtectedRoute component={Course} />}
