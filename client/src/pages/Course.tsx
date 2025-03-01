@@ -20,11 +20,21 @@ export default function Course() {
   const { toast } = useToast();
 
   const { data: course } = useQuery<Course>({
-    queryKey: [`/api/courses/${courseId}`]
+    queryKey: [`/api/courses/${courseId}`],
+    queryFn: async () => {
+      const response = await fetch(`/api/courses/${courseId}`);
+      if (!response.ok) throw new Error('Failed to fetch course');
+      return response.json();
+    }
   });
 
   const { data: materials, refetch: refetchMaterials } = useQuery<Material[]>({
-    queryKey: [`/api/courses/${courseId}/materials`]
+    queryKey: [`/api/courses/${courseId}/materials`],
+    queryFn: async () => {
+      const response = await fetch(`/api/courses/${courseId}/materials`);
+      if (!response.ok) throw new Error('Failed to fetch materials');
+      return response.json();
+    }
   });
 
   const [isScraping, setIsScraping] = useState(false);

@@ -14,6 +14,7 @@ export interface IStorage {
   getCourse(id: number): Promise<Course | undefined>;
   getCoursesByUser(userId: number): Promise<Course[]>;
   createCourse(course: InsertCourse & { userId: number }): Promise<Course>;
+  getCourseById(courseId: number): Promise<Course | null>; // Added function
 
   // Materials
   getMaterial(id: number): Promise<Material | undefined>;
@@ -91,6 +92,11 @@ export class MemStorage implements IStorage {
     const newCourse: Course = { ...course, id };
     this.courses.set(id, newCourse);
     return newCourse;
+  }
+
+  async getCourseById(courseId: number): Promise<Course | null> { // Added function implementation
+    const course = this.courses.get(courseId);
+    return course || null;
   }
 
   // Materials

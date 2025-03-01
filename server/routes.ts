@@ -82,6 +82,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(courses);
   });
 
+  app.get("/api/courses/:id", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const courseId = parseInt(req.params.id);
+    if (isNaN(courseId)) {
+      return res.status(400).json({ message: "Invalid course ID" });
+    }
+
+    try {
+      const course = await storage.getCourseById(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      // Verifica che l'utente abbia accesso a questo corso
+      if (course.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      res.json(course);
+    } catch (error) {
+      console.error("Error fetching course:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   app.post("/api/courses", async (req, res) => {
     if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Unauthorized" });
