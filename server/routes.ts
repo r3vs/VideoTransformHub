@@ -1,31 +1,60 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import passport from "passport";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { insertCourseSchema, insertMaterialSchema, insertStudyPlanSchema, insertStudyTaskSchema } from "@shared/schema";
+import { insertCourseSchema, insertMaterialSchema, insertStudyPlanSchema, insertStudyTaskSchema, insertUserSchema } from "@shared/schema";
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Auth routes
+  app.post("/api/auth/register", async (req, res) => {
+    const parsed = insertUserSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: "Invalid registration data" });
+
+    const existingUser = await storage.getUserByUsername(parsed.data.username);
+    if (existingUser) return res.status(400).json({ message: "Username already taken" });
+
+    const user = await storage.createUser(parsed.data);
+    req.login(user, (err) => {
+      if (err) return res.status(500).json({ message: "Error logging in" });
+      res.json(user);
+    });
+  });
+
+  app.post("/api/auth/login", passport.authenticate("local"), (req, res) => {
+    res.json(req.user);
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.logout(() => {
+      res.json({ message: "Logged out" });
+    });
+  });
+
+  app.get("/api/auth/user", (req, res) => {
+    if (!req.user) return res.status(401).json({ message: "Not authenticated" });
+    res.json(req.user);
+  });
+
   // Course routes
   app.get("/api/courses", async (req, res) => {
-    const userId = req.session?.userId;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
-    
-    const courses = await storage.getCoursesByUser(userId);
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+    const courses = await storage.getCoursesByUser(req.user.id);
     res.json(courses);
   });
 
   app.post("/api/courses", async (req, res) => {
-    const userId = req.session?.userId;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
     const parsed = insertCourseSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ message: "Invalid course data" });
 
-    const course = await storage.createCourse({ ...parsed.data, userId });
+    const course = await storage.createCourse({ ...parsed.data, userId: req.user.id });
     res.json(course);
   });
 
@@ -66,21 +95,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Study plan routes
   app.get("/api/study-plans", async (req, res) => {
-    const userId = req.session?.userId;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-    const plans = await storage.getStudyPlansByUser(userId);
+    const plans = await storage.getStudyPlansByUser(req.user.id);
     res.json(plans);
   });
 
   app.post("/api/study-plans", async (req, res) => {
-    const userId = req.session?.userId;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
     const parsed = insertStudyPlanSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ message: "Invalid study plan data" });
 
-    const plan = await storage.createStudyPlan({ ...parsed.data, userId });
+    const plan = await storage.createStudyPlan({ ...parsed.data, userId: req.user.id });
     res.json(plan);
   });
 
