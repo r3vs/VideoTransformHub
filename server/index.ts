@@ -6,6 +6,14 @@ import MemoryStore from "memorystore";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { storage } from "./storage";
+import { type User } from "@shared/schema";
+
+// Add type definition for Express.User
+declare global {
+  namespace Express {
+    interface User extends User {}
+  }
+}
 
 const MemoryStoreSession = MemoryStore(session);
 
@@ -21,13 +29,14 @@ passport.use(new LocalStrategy(async (username, password, done) => {
   }
 }));
 
-passport.serializeUser((user: any, done) => {
+passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
 passport.deserializeUser(async (id: number, done) => {
   try {
     const user = await storage.getUser(id);
+    if (!user) return done(new Error("User not found"));
     done(null, user);
   } catch (err) {
     done(err);
