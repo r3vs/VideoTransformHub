@@ -24,14 +24,26 @@ interface MoodleScrapingResponse {
     id: string;
     name: string;
     url: string;
+    materials?: Array<{
+      type: string;
+      name: string;
+      file?: string;
+      url: string;
+    }>;
+    deadlines?: Array<{
+      type: string;
+      name: string;
+      deadline: string;
+      url: string;
+    }>;
   }>;
 }
 
 const moodleFormSchema = z.object({
   moodleUrl: z.string().url("Please enter a valid Moodle URL"),
-  username: z.string().optional(),
-  password: z.string().optional(),
-  autoLogin: z.boolean().default(false)
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+  autoLogin: z.boolean().default(true)
 });
 
 type MoodleFormValues = z.infer<typeof moodleFormSchema>;
@@ -52,7 +64,7 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
       moodleUrl: "",
       username: "",
       password: "",
-      autoLogin: true // Set autoLogin to true by default
+      autoLogin: true // Always require credentials
     }
   });
 
@@ -70,41 +82,32 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
           moodleUrl: data.moodleUrl,
           courseId: courseId,
           username: data.username,
-          password: data.password,
-          autoLogin: data.autoLogin
+          password: data.password
         });
 
-        const materialsCount = response.courses?.length || 0;
+        // Count all materials and deadlines
+        const materialsCount = response.courses?.reduce((acc, course) => {
+          return acc + (course.materials?.length || 0) + (course.deadlines?.length || 0);
+        }, 0) || 0;
+
         setScrapedCount(materialsCount);
 
         toast({
           title: "Scraping completed successfully",
-          description: `Imported ${materialsCount} courses from Moodle`
+          description: `Imported ${materialsCount} items from Moodle`
         });
       } else {
-        // Fallback to original implementation with Gemini
-        const scraperData = {
-          moodleUrl: data.moodleUrl,
-          courseId: courseId
-        };
-
-        // Add credentials only if autoLogin is enabled
-        if (data.autoLogin && data.username && data.password) {
-          Object.assign(scraperData, {
-            username: data.username,
-            password: data.password,
-            autoLogin: true
-          });
-        }
-
-        // API call for scraping
+        // Fallback to Gemini analysis
         const response = await apiRequest<{ count: number }>(
           "POST", 
           `/api/courses/${courseId}/scrape-moodle`, 
-          scraperData
+          {
+            moodleUrl: data.moodleUrl,
+            username: data.username,
+            password: data.password
+          }
         );
 
-        // Handle response
         const materialsCount = response.count || 0;
         setScrapedCount(materialsCount);
 
@@ -114,7 +117,6 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
         });
       }
 
-      // Success callback
       onSuccess();
     } catch (error) {
       console.error("Error during scraping:", error);
@@ -156,58 +158,31 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
 
             <FormField
               control={form.control}
-              name="autoLogin"
+              name="username"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
                   <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <Input placeholder="Moodle username" {...field} />
                   </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Use credentials for access
-                    </FormLabel>
-                    <FormDescription>
-                      Enable to provide Moodle login credentials
-                    </FormDescription>
-                  </div>
+                  <FormMessage />
                 </FormItem>
               )}
             />
 
-            {form.watch("autoLogin") && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Moodle username" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="Moodle password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="Moodle password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (

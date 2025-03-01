@@ -1,0 +1,664 @@
+ai un refactoring di questo piano permettendo di accettare come input non solo video ma i dati dell'intera pagina Moodle, come testo, file vari (pdf, codice, ecc..), link e segnali eventuali consegne con scadenza o quiz. Lo studente puo caricare materiale proprio come libri, appunti o prove d'esame. Pensavo di utilizzare Gemini 2 pro per le sue capacita multimodali (testo ma sopratutto analisi video e audio combinata) e LearnLM come supporto allo studio aggiuntivo.
+
+Recupera automaticamente le risorse dai corsi Moodle usando OmniTool (con Omniparser) combinato con le API di Gemini 2 pro, tutte le informazioni prese vengono poi analizzate approfonditamente da gemini 2 pro per generare un elaborato che viene inviato a LearnLM.
+
+Generi Piani di Studio Personalizzati
+
+
+
+Per ogni corso, crea un piano di studio su misura che tenga conto delle date degli appelli d’esame, degli impegni già presenti nel calendario e delle tecniche di studio più efficaci.
+
+Il piano si adatta dinamicamente in base agli impegi, al feedback e ai risultati dello studente.
+
+Notifiche Proattive e Pianificazione
+
+
+
+Sistema di notifiche via email e integrazione con Google Calendar per informare lo studente di nuovi contenuti, aggiornamenti del piano di studio e imminenti appelli.
+
+
+
+Modulo Piani di Studio Personalizzati
+
+
+
+Funzione: Genera per ciascun corso un piano di studio su misura, integrando:
+
+Date degli appelli d’esame (provenienti da Moodle o inserite manualmente).
+
+Impegni nel calendario (sincronizzati con Google Calendar).
+
+Tecniche di studio efficaci (Pomodoro, spaced repetition, revisioni mirate) che si adattano al feedback.
+
+Adattabilità: Il piano si aggiorna dinamicamente in base alle performance dello studente
+
+Funzione: Funziona da front-end per organizzare, visualizzare e navigare il materiale elaborato.
+
+Output: Ogni corso genera una cartella di output con i materiali finali e un riepilogo delle fonti utilizzate, evidenziando la gerarchia di affidabilità.
+
+
+
+Ecco un refactoring del progetto con un focus maggiore sull’integrazione e l’ottimizzazione di LearnLM per il supporto all’apprendimento:
+
+
+
+---
+
+
+
+## 1. Integrazione Avanzata di LearnLM
+
+
+
+**Obiettivo:**
+
+Integrare LearnLM come componente centrale per il tutoraggio e la personalizzazione del percorso di apprendimento, sfruttando le sue capacità specifiche di "instruction following" e adattamento pedagogico.
+
+
+
+**Modifiche:**
+
+
+
+- **Modulazione del Tutoring:**
+
+Integra LearnLM nel modulo di generazione degli appunti e nella creazione di quiz personalizzati. In questo modo, oltre a produrre documenti in LaTeX, il sistema utilizza LearnLM per:
+
+- Generare domande di ripasso e quiz che si adattano alle capacità e al progresso dello studente.
+
+- Offrire feedback interattivo durante le sessioni di studio, guidando lo studente attraverso spiegazioni passo-passo e domande socratiche.
+
+
+
+- **Istruzioni di Sistema Ottimizzate:**
+
+Aggiorna le istruzioni di sistema per LearnLM con prompt specifici che enfatizzano:
+
+- La necessità di non fornire direttamente le soluzioni, ma di stimolare il ragionamento.
+
+- L’uso di tecniche di "active learning" e di metacognizione (ad esempio, chiedendo allo studente di spiegare il proprio ragionamento).
+
+- Un linguaggio adattato al livello dello studente, per garantire che le spiegazioni siano chiare e comprensibili.
+
+
+
+*Tecnologie e strumenti:*
+
+- Utilizzo di Google AI Studio per configurare LearnLM con parametri (temperatura, top-K, top-P) ottimizzati per il contesto educativo.
+
+- Impiego di prompt few-shot per guidare il modello nella generazione di contenuti formativi coerenti.
+
+
+
+---
+
+
+
+## 2. Modulo di Pianificazione dello Studio Personalizzato con LearnLM
+
+
+
+**Obiettivo:**
+
+Utilizzare LearnLM per arricchire il modulo di pianificazione dello studio, in modo da creare piani di studio dinamici e adattivi che tengano conto dei progressi e delle esigenze individuali.
+
+
+
+**Modifiche:**
+
+
+
+- **Generazione di Piani di Studio Dinamici:**
+
+Integra LearnLM per analizzare i dati raccolti (risultati dei quiz, feedback degli studenti, performance sui compiti) e suggerire:
+
+- Sessioni di ripasso basate su spaced repetition, calibrate in base alla difficoltà riscontrata.
+
+- Attività di apprendimento mirate che collegano concetti chiave e suggeriscono risorse aggiuntive.
+
+
+- **Feedback e Adattamento Continuo:**
+
+LearnLM può inviare notifiche interattive e suggerimenti via email o integrarsi con Google Calendar per aggiornare in tempo reale il piano di studio, in base al feedback continuo dello studente.
+
+
+
+*Tecnologie e strumenti:*
+
+- Integrazione delle API di Google Calendar per sincronizzare il piano di studio generato da LearnLM.
+
+- Database PostgreSQL e Redis per memorizzare e gestire dinamicamente i dati di apprendimento e i piani personalizzati.
+
+
+
+---
+
+
+
+## 3. Interfaccia di Revisione e Tutoraggio Interattivo
+
+
+
+**Obiettivo:**
+
+Migliorare l’interfaccia utente per sfruttare appieno le capacità di LearnLM, creando un’esperienza interattiva e personalizzata per docenti e studenti.
+
+
+
+**Modifiche:**
+
+
+
+- **Dashboard di Tutoraggio:**
+
+Implementa un’interfaccia che consenta agli studenti di interagire direttamente con LearnLM per:
+
+- Ottenere spiegazioni personalizzate sui contenuti studiati.
+
+- Ricevere quiz e domande di follow-up che stimolino il ragionamento critico.
+
+- Visualizzare feedback immediato e suggerimenti di miglioramento.
+
+
+
+- **Editor Interattivo per Appunti e Quiz:**
+
+Integrazione di un editor (in React) che mostri sia il testo generato da LearnLM sia i suggerimenti per la revisione, permettendo agli insegnanti di intervenire e personalizzare ulteriormente il contenuto prima della finalizzazione.
+
+
+
+*Tecnologie e strumenti:*
+
+- Front-end basato su React con componenti per video player, editor di testo e visualizzazione di quiz interattivi.
+
+- Backend FastAPI con WebSocket per notifiche in tempo reale e per il monitoraggio dell’interazione LearnLM.
+
+
+
+---
+
+
+
+## 4. Valutazione e Iterazione Continua
+
+
+
+**Obiettivo:**
+
+Garantire che LearnLM venga continuamente raffinato attraverso feedback e valutazioni per migliorare il suo impatto pedagogico.
+
+
+
+**Modifiche:**
+
+
+
+- **Raccolta Feedback:**
+
+Integra un modulo di valutazione in cui docenti e studenti possano fornire feedback diretto sull’efficacia delle spiegazioni e dei quiz generati da LearnLM.
+
+- **Analisi delle Prestazioni:**
+
+Utilizza strumenti di analytics (ad esempio Prometheus e Grafana) per monitorare le interazioni con LearnLM e identificare aree di miglioramento.
+
+- **Aggiornamenti Iterativi:**
+
+Imposta un ciclo di revisione periodico (ad es., mensile) per aggiornare prompt, istruzioni di sistema e parametri di LearnLM in base al feedback ricevuto e alle evoluzioni della ricerca pedagogica.
+
+
+
+*Tecnologie e strumenti:*
+
+- Strumenti di monitoraggio e log per tracciare le performance e l’efficacia di LearnLM nel tempo.
+
+- Feedback loop integrato nella piattaforma, con dashboard per analizzare i dati di interazione.
+
+
+
+---
+
+
+
+## Conclusioni
+
+
+
+Questo refactoring integra LearnLM in modo più profondo nel progetto, sfruttandone le capacità per:
+
+- Creare contenuti didattici personalizzati e interattivi.
+
+- Generare piani di studio adattivi basati sui progressi degli studenti.
+
+- Migliorare l’esperienza di tutoraggio attraverso un’interfaccia utente interattiva e dinamica.
+
+- Garantire un ciclo continuo di feedback e iterazione per affinare il comportamento pedagogico del modello.
+
+
+
+Questi miglioramenti permetteranno al sistema di offrire un supporto educativo altamente personalizzato e dinamico, sfruttando al meglio le potenzialità di LearnLM.
+
+
+
+# Introduzione
+
+Il nuovo sistema integrato per l’analisi delle video-lezioni ingegneristiche unisce due progetti precedenti in una piattaforma unica e completa. L’obiettivo è automatizzare la creazione di appunti strutturati e materiali di studio a partire da lezioni registrate, migliorando al contempo l’esperienza sia degli studenti che dei docenti. Attraverso un’architettura modulare, il sistema acquisisce video e slide da varie fonti, analizza i contenuti audio-visivi con tecniche avanzate di IA (ASR, OCR e modelli multimodali) e genera output utili come trascrizioni in LaTeX, riassunti, mappe concettuali, flashcard e quiz. Inoltre, prevede la pianificazione personalizzata dello studio con tecniche di apprendimento attivo (ripetizione dilazionata) e offre un’interfaccia web interattiva per revisionare e approvare i risultati prima della produzione finale di un PDF. Di seguito descriviamo nel dettaglio l’architettura software del sistema, le interconnessioni tra i suoi moduli, le tecnologie scelte per la realizzazione e un piano di sviluppo progressivo.
+
+
+
+# Architettura del Sistema Integrato
+
+L’architettura proposta è **modulare e multilivello**, in modo da suddividere chiaramente le responsabilità tra diversi componenti e facilitare sia lo sviluppo che la scalabilità. I principali moduli del sistema sono:
+
+
+
+1. **Modulo di Acquisizione dei Contenuti** – gestisce l’importazione di video-lezioni e materiali correlati da fonti diverse (Moodle, Google Drive, OneDrive, file locali, ecc.).
+
+2. **Modulo di Analisi Multimodale** – esegue l’analisi automatica del contenuto audiovisivo: trascrizione audio (ASR), OCR avanzato per testi e formule (anche manoscritte) e interpretazione di diagrammi/immagini.
+
+3. **Modulo di Generazione Appunti (LLM Processor)** – utilizza modelli di linguaggio avanzati per creare appunti strutturati e formattati (in LaTeX) a partire dai dati grezzi (trascrizioni e riconoscimenti) forniti dal modulo di analisi.
+
+4. **Modulo di Output Intelligenti** – produce materiali di studio aggiuntivi (riassunti, mappe concettuali, flashcard, quiz) sfruttando gli LLM e le informazioni strutturate.
+
+5. **Modulo di Piano di Studio Personalizzato** – organizza le attività di studio e ripasso su un calendario (es. Google Calendar) applicando la tecnica della ripetizione dilazionata per massimizzare la ritenzione delle informazioni.
+
+6. **Interfaccia di Revisione Interattiva (Front-end)** – un’applicazione web (in React) che funge da punto di interazione per utenti e docenti, permettendo di visualizzare video, trascrizioni, appunti generati e materiali intelligenti, con la possibilità di correggere errori o modificare il contenuto prima di finalizzare il PDF.
+
+7. **Infrastruttura di Scalabilità e Deployment** – insieme di servizi e ottimizzazioni (es. API backend, database, motore di ricerca testuale/vettoriale, caching) che garantiscono performance elevate e facilità di distribuzione del sistema in produzione.
+
+
+
+Questi moduli interagiscono in una **pipeline** sequenziale ma flessibile. In fase di elaborazione tipica, il contenuto passa attraverso i moduli nell’ordine sopra descritto: prima viene acquisito, poi analizzato, quindi trasformato in appunti, arricchito con output aggiuntivi, pianificato nello studio e infine presentato per revisione. L’uso di un’architettura modulare consente anche di eseguire alcuni componenti in parallelo o su server separati (ad esempio, trascrizione ASR e OCR possono avvenire simultaneamente) e di sostituire facilmente parti dell’implementazione (ad esempio utilizzare un motore ASR diverso) senza impattare l’intero sistema.
+
+
+
+## Acquisizione dei Contenuti
+
+Il **Modulo di Acquisizione** è responsabile di raccogliere automaticamente i materiali didattici dalle varie fonti in cui possono risiedere:
+
+- **Piattaforme e-Learning (Moodle)**: il sistema può utilizzare le API di Moodle (o scraping se necessario) per individuare nuove video-lezioni caricate dai docenti e scaricarne copia locale. Ad esempio, un processo schedulato controlla periodicamente un corso Moodle e scarica i video, insieme ad eventuali slide o dispense collegate.
+
+- **Cloud Storage (Google Drive, OneDrive)**: integrazioni con le API di Google Drive e OneDrive permettono di monitorare cartelle condivise o link forniti dall’utente. Se un docente inserisce un video in una cartella condivisa, il modulo di acquisizione ne effettua il download.
+
+- **File Locali**: l’utente può anche caricare manualmente file video (o PDF di slide, immagini, etc.) attraverso l’interfaccia web. L’applicazione invia quindi questi file al backend per l’elaborazione.
+
+
+
+Questo modulo funge da **ingestion layer** centralizzato: una volta ottenuti i file video e gli eventuali file ausiliari (slide in PDF, immagini di lavagna, ecc.), li registra nel database (PostgreSQL) con le relative meta-informazioni (titolo della lezione, data, fonte, ecc.). Inoltre, notifica il sistema di analisi che nuovi contenuti sono pronti per essere processati. In un contesto multi-utente (es. più studenti/corsi), il modulo di acquisizione isola i contenuti per utente o per corso, garantendo che ogni video-lezione venga associata all’utente/corso corretto.
+
+
+
+*Tecnologie chiave*: Python per implementare script di integrazione con API (usando ad esempio le librerie ufficiali di Google Drive/OneDrive), e database PostgreSQL per tenere traccia dello stato di acquisizione. Questo componente può funzionare anche in background (ad esempio come servizio Celery o worker separato) in modo da eseguire controlli periodici sulle fonti esterne senza bloccare l’interfaccia utente.
+
+
+
+## Analisi Multimodale dei Contenuti
+
+Il **Modulo di Analisi** prende in ingresso i video e i materiali grezzi acquisiti, e ne estrae informazioni testuali e descrittive usando una combinazione di tecniche:
+
+
+
+- **Trascrizione Audio (ASR)**: l’audio di ogni video-lezione viene convertito in testo tramite modelli di riconoscimento vocale automatico. Utilizziamo preferenzialmente [OpenAI Whisper](https://openai.com/blog/whisper/) (o equivalenti open-source/offline) per la sua accuratezza con terminologia tecnica e lingua italiana. Whisper trascrive l’audio restituendo testo arricchito con *timestamp*, così da sapere a quale punto del video corrisponde ciascuna frase. Questo permette in seguito di collegare parti del testo al momento esatto nel video. In caso di accenti o rumore di fondo, Whisper (spec. i modelli di taglia medio/large) garantisce robustezza. (Opzionalmente, si può integrare un motore alternativo come Kaldi o Google Cloud Speech-to-Text, configurabile dall’utente).
+
+
+
+- **OCR Avanzato per Slide e Scritti a Mano**: in parallelo alla trascrizione audio, il sistema analizza la componente visiva del video. Se la lezione include **slide** (es. il docente condivide lo schermo con presentazioni) o **lavagne scritte a mano** (es. tablet o lavagna tradizionale visibile in video), vengono estratti i frame rilevanti e processati:
+
+- Per il **testo digitale nelle slide**: utilizziamo OCR tradizionale (Tesseract) o modelli transformer dedicati come TrOCR per estrarre titoli, punti elenco e testi dalle immagini delle slide. Il risultato è una versione testuale delle slide, utile per integrare informazioni magari non enunciate verbalmente ma presenti visivamente.
+
+- Per le **scritte a mano e formule matematiche**: impieghiamo strumenti specializzati. Ad esempio, **Mathpix** (via API) offre riconoscimento molto accurato di formule matematiche scritte a mano o digitazioni complesse, restituendo LaTeX delle formule. In alternativa, modelli open-source come TrOCR addestrati su caratteri manoscritti possono contribuire per testi scritti a mano. Il sistema analizza frame chiave in cui rileva la presenza di scrittura (ad es. usando tecniche di differenza tra frame per capire quando il docente scrive qualcosa di nuovo sulla lavagna) e applica OCR avanzato su quei ritagli di immagine. Si ottiene così una lista di contenuti “visivi” con relativo timestamp: ad esempio *al minuto 10:05 compare la formula \( E = mc^2 \)*.
+
+- Per i **diagrammi e grafici**: le semplici immagini possono essere descritte tramite modelli di *image captioning*. Per diagrammi tecnici, il sistema può sfruttare modelli multimodali come CLIP o BLIP2 per generare una descrizione testuale (“diagramma di flusso che illustra il processo X”). Queste descrizioni testuali dei grafici saranno poi utilizzate dal modello LLM per arricchire gli appunti (es. “come mostrato nel grafico…”).
+
+
+
+- **Allineamento temporale e segmentazione**: Il modulo di analisi combina i risultati di ASR e OCR, allineandoli temporalmente. Ciò significa che per ogni intervallo del video abbiamo: il parlato trascritto, e se presenti, il testo rilevato nelle slide o formule scritte a mano in quell’intervallo. In base a questi dati, si può anche **segmentare la lezione in sezioni** (ad esempio cambi di slide indicano l’inizio di un nuovo argomento, oppure pause lunghe nel parlato possono segnalare un cambio di sezione). Questa segmentazione iniziale serve come base per strutturare gli appunti.
+
+
+
+Il risultato finale di questo modulo è una **rappresentazione strutturata grezza** della lezione: una sequenza cronologica di blocchi contenenti trascrizione testuale, testo da slide, formule e descrizioni di immagini, ciascuno con riferimenti temporali precisi. Tutti questi dati vengono salvati in un database (o file JSON strutturato) e indicizzati per utilizzi successivi.
+
+
+
+*Tecnologie chiave*: oltre a Whisper (ASR) e Tesseract/TrOCR/Mathpix (OCR), vengono usati Python e librerie come OpenCV (per estrarre frame video e rilevare regioni di interesse), PyTorch/TensorFlow per eseguire modelli di deep learning (ad es. un detector per capire se un frame contiene testo/diagrammi). L’intero processo può essere orchestrato da un componente Python dedicato (ad esempio in src/transcription.py e src/ocr.py) che dopo l’acquisizione lancia i vari sottoprocessi di analisi. Si possono introdurre code di elaborazione (Celery/RQ) per parallelizzare audio e video analysis. Per i dati estratti, PostgreSQL memorizza testi e riferimenti, mentre contenuti pesanti come immagini di slide possono essere salvati su disco o cloud storage con solo il percorso registrato a database.
+
+
+
+## Generazione di Appunti Strutturati (LaTeX)
+
+Una volta ottenuti la trascrizione e gli elementi testuali dalle slide/lavagna, entra in gioco il **Modulo di Generazione Appunti**, che sfrutta modelli di linguaggio avanzati (LLM) per produrre un documento coeso, ben formattato e gerarchicamente strutturato. Questo modulo (implementato ad es. in src/llm_processor.py) esegue i seguenti passi:
+
+
+
+- **Preparazione del Prompt per LLM**: Il sistema costruisce un prompt dettagliato da dare in pasto al modello linguistico. Nel prompt vengono inseriti:
+
+- La trascrizione completa della lezione (o eventualmente suddivisa per sezione se la lezione è lunga, per mantenere il prompt sotto i limiti di token).
+
+- L’elenco delle formule/testi scritti a mano con relativi timestamp, ad es. “[10:05] Formula: \( E = mc^2 \)”.
+
+- Il testo delle slide con indicazione di numero di slide e timestamp.
+
+- Istruzioni chiare su come produrre l’output: ad esempio, *“Sei un assistente che crea appunti strutturati da video-lezioni ingegneristiche. Integra le informazioni provenienti dall’audio, dalle scritte a mano e dalle slide. Organizza il testo in capitoli e paragrafi gerarchici, inserisci le formule matematiche in notazione LaTeX, usa un tono formale e preciso. Mantieni la correttezza tecnica. Aggiungi riferimenti temporali al video dove opportuno.”* Queste istruzioni guidano l’LLM a generare un contenuto conforme alle aspettative (ad es. usando \section{...}, \subsection{...}, formule racchiuse in $...$ ecc.).
+
+
+
+- **Uso di LLM per Generazione**: Viene interrogato un modello di linguaggio di grandi dimensioni con il prompt preparato. Idealmente si utilizza **GPT-4** (via API OpenAI) per la sua capacità di comprendere contesti lunghi e output testualmente puliti e strutturati. In alternativa, per una soluzione open-source/offline, si può impiegare **LLaMA 2** fine-tunata sul dominio tecnico/accademico, oppure altri modelli avanzati come **GPT-3.5** o future versioni open specializzate. LLM elabora il prompt e restituisce un testo che rappresenta gli appunti della lezione. Questo testo includerà titoli, sottotitoli, elenchi puntati o numerati per elencare punti chiave, definizioni, teoremi, oltre alle formule correttamente trascritte in LaTeX e persino descrizioni di figure o riferimenti ai punti del video.
+
+
+
+- **Post-processing e Formattazione LaTeX**: Il testo generato viene ripulito e convertito in un file LaTeX completo. Si utilizza il **Modulo Generatore LaTeX** (es. src/latex_generator.py) che incapsula il contenuto in un template LaTeX predefinito. Questo template include:
+
+- Intestazione con pacchetti standard (babel per italiano, amsmath per formule, graphicx per immagini, hyperref per i link, ecc.).
+
+- Stili per evidenziare elementi importanti (ad es. ambienti tcolorbox per “note” o definizioni).
+
+- Comandi personalizzati per i link video: viene definito un comando LaTeX, ad esempio \videolink{10:05}{🎬}, che crea un hyperlink cliccabile sull’icona di una cinepresa 🎬 e che, se il PDF viene aperto su un computer con il video disponibile, consente di aprire il video al timestamp specifico. Questa funzionalità è implementata tramite \href e protocollo run: o attraverso un URL web se il video è hostato onli ([repomix-output.txt](file://file-5dYFmaZrXFoyLCDNYPQtHu#:~:text=,per%20i%20link%20al%20video)) ([repomix-output.txt](file://file-5dYFmaZrXFoyLCDNYPQtHu#:~:text=f,DeclareUrlCommand%5Cvideo%7B%5Curlstyle%7Bsame))9】. In sostanza, ogni sezione degli appunti può contenere riferimenti ipertestuali al momento corrispondente della lezione, permettendo allo studente di rivedere facilmente quel punto del video.
+
+- Inserimento di immagini o snapshot significativi: se durante l’analisi sono stati estratti diagrammi o figure importanti (ad es. grafici complessi non facilmente descrivibili a parole), il generatore LaTeX può includerli come immagini nel documento (ad esempio salvando il frame come PNG e includendolo con \includegraphics).
+
+
+
+- **Validazione Formule e Contenuti**: Il testo prodotto dall’LLM viene automaticamente verificato per correggere eventuali errori di sintassi LaTeX. Ad esempio, il modulo LaTeX può correggere caratteri speciali sfuggiti (%, _ etc.), bilanciare $ per le formule matematiche e rimuovere qualunque comando LaTeX non permesso che il modello avesse potuto inseri ([repomix-output.txt](file://file-5dYFmaZrXFoyLCDNYPQtHu#:~:text=,%27%27%2C%20content)) ([repomix-output.txt](file://file-5dYFmaZrXFoyLCDNYPQtHu#:~:text=,Escape%20dei%20caratteri%20percentuale))7】. Inoltre, se il modello ha frainteso qualche formula, c’è la possibilità di ricontrollare le formule chiave con Mathpix per maggiore accuratezza.
+
+
+
+L’output di questo modulo è un documento LaTeX strutturato (e volendo già compilato in PDF) che rappresenta una versione organica e di alta qualità della lezione. Questo documento, prima di essere definitivo, passa però attraverso il vaglio dell’interfaccia di revisione (dove potrà essere corretto manualmente).
+
+
+
+*Tecnologie chiave*: Python per orchestrare chiamate all’API di OpenAI (o per caricare modelli LLM locali via HuggingFace Transformers), e librerie come Jinja2 per gestire template LaTeX. LaTeX stesso (distribuzione TeX Live) deve essere presente sul sistema server per compilare il documento in PDF. Inoltre, moduli come subprocess o pylatex possono essere usati per automatizzare la compilazione e generare l’indice, ecc. È importante avere un buon sistema di logging e controllo, dato che l’LLM è generativo: mantenere versioni intermedie (salvate su DB) del prompt e della risposta dell’LLM aiuta nel debugging e per eventuali miglioramenti iterativi.
+
+
+
+## Output Intelligenti (Riassunti, Mappe Concettuali, Flashcard, Quiz)
+
+Oltre agli appunti estesi in LaTeX, il sistema genera anche materiale aggiuntivo per supportare lo studio attivo. Questo avviene nel **Modulo di Output Intelligenti**, anch’esso basato su modelli AI (in gran parte LLM) e sulle informazioni strutturate ottenute. Le principali funzionalità sono:
+
+
+
+- **Riassunti dettagliati**: Viene prodotto un riassunto della lezione o dei singoli capitoli. Si può utilizzare lo stesso LLM (o un prompt diverso) per ottenere un *compendio* più conciso ma completo degli argomenti trattati. Ad esempio, dopo aver generato gli appunti, si chiede al modello: *“Fornisci un riassunto in 10 punti degli argomenti trattati, evidenziando le conclusioni principali e le formule più importanti”*. Il risultato potrebbe essere inserito all’inizio del documento LaTeX come “abstract” o fornito separatamente agli studenti per un ripasso veloce.
+
+
+
+- **Mappe concettuali**: Il sistema identifica i concetti chiave e le relazioni tra di essi per costruire una mappa concettuale (concise concept map) della lezione. Questo può avvenire analizzando la struttura gerarchica degli appunti (sezioni e sottosezioni spesso corrispondono a concetti e sotto-concetti) e chiedendo all’LLM di esprimere relazioni tipo *“X è collegato a Y perché …”*. Alternativamente, utilizzando la rappresentazione vettoriale dei testi (embedding), il modulo può raggruppare frasi o paragrafi per vicinanza semantica – qui entra in gioco **FAISS (Facebook AI Similarity Search)** che permette di cercare similarità tra i concetti individuati. Una volta identificati i nodi concettuali e le connessioni, la mappa può essere rappresentata in formato testuale strutturato (ad esempio un JSON o un GraphML contenente nodi e archi), che l’interfaccia utente renderà come grafo visuale interattivo (con librerie JavaScript tipo D3.js). Nel PDF finale, la mappa concettuale potrebbe essere inclusa come immagine generata (usando magari GraphViz per disegnare il grafo automaticamente a partire dalla descrizione).
+
+
+
+- **Flashcard (Domande & Risposte)**: Per favorire l’apprendimento attivo, il sistema genera una serie di flashcard basate sul contenuto della lezione. L’LLM viene istruito a produrre domande a risposta aperta o definizioni da completare. Ad esempio, potrebbe generare una domanda del tipo *“Qual è la differenza tra il teorema X e il teorema Y presentati nella lezione?”* con la relativa risposta dettagliata, oppure *“Definisci il concetto di Y”*. Queste flashcard possono essere esportate in formati compatibili con Anki o altre app di SRS (spaced repetition systems) per essere facilmente importate dagli studenti. In aggiunta, il sistema stesso le utilizzerà nel modulo di pianificazione per programmare i ripassi.
+
+
+
+- **Quiz e esercizi**: Similarmente, il sistema può proporre un breve quiz sulle materie trattate, ad esempio 5-10 domande a scelta multipla o esercizi di calcolo. Questi possono essere generati sempre tramite LLM (magari modelli specializzati come *Minerva* di Google per contenuti matematici avanzati), istruendoli a usare il contenuto della lezione per creare domande con 4 opzioni di risposta, segnando anche la risposta corretta. I quiz servono come autovalutazione per lo studente e possono essere integrati nell’interfaccia (eseguibili online) o inclusi nell’appendice del PDF finale con le soluzioni nascoste (da rivelare magari con un comando \pause in LaTeX o fornite a parte).
+
+
+
+Tutti questi output “intelligenti” arricchiscono l’esperienza di studio. Dal punto di vista architetturale, il modulo che li produce può essere attivato dopo la generazione degli appunti principali, riutilizzando molto del contesto già elaborato. Per esempio, può utilizzare il documento strutturato in LaTeX come base (convertendolo in testo semplice) per estrarre punti chiave (riassunto) o termini importanti (per flashcard). LLM come GPT-4 tornano utili qui per la loro capacità di sintesi e riformulazione. I risultati vengono poi memorizzati nel database (collegati alla lezione specifica) e resi disponibili all’interfaccia utente.
+
+
+
+*Tecnologie chiave*: Oltre agli LLM menzionati, si usano **FAISS** per operazioni di embedding e ricerca semantica veloce, necessario per costruire mappe concettuali o per cercare contenuti rilevanti (ad esempio, se si hanno tante lezioni indicizzate, FAISS consente di trovare concetti correlati in altre lezioni, eventualmente suggerendo collegamenti). Python gestisce la logica di estrazione di concetti e interrogazione LLM. Librerie come NetworkX possono aiutare a modellare relazioni concettuali in un grafo prima di visualizzarle. Per le flashcard, oltre al formato proprietario di Anki (APKG), si può generare un semplice CSV o JSON.
+
+
+
+## Piano di Studio Personalizzato
+
+Il **Modulo di Piano di Studio** utilizza i materiali generati per creare un calendario di studio efficiente e personalizzato per l’utente. L’idea è di sfruttare la *spaced repetition (ripetizione dilazionata)* e la suddivisione del carico di studio su più giorni per massimizzare l’apprendimento. Ecco come funziona questo componente:
+
+
+
+- **Suddivisione in Sessioni di Studio**: A partire dalla quantità di materiale (durata della lezione, numero di concetti emersi, difficoltà degli argomenti), il sistema determina quante sessioni di studio sono consigliabili. Ad esempio, per una lezione di 2 ore densa di contenuto, potrebbe suggerire di suddividerla in 3 sessioni: (1) visione/ascolto attivo e lettura appunti, (2) ripasso con flashcard, (3) svolgimento quiz/esercizi. Queste sessioni vengono pianificate magari nei giorni successivi alla lezione.
+
+
+
+- **Applicazione della Ripetizione Dilazionata**: Ogni concetto o flashcard generata viene programmata per il ripasso a intervalli crescenti. Ad esempio, dopo la prima esposizione, il sistema calendarizza un ripasso dopo 1 giorno, poi dopo 3 giorni, poi dopo 1 settimana, ecc. Questi intervalli possono basarsi su modelli noti (come l’algoritmo SM2 di SuperMemo, usato da Anki) oppure essere adattivi in base al feedback dello studente. In pratica, il modulo registra quando uno studente segna un flashcard come “nota bene” o “da ripassare” e aggiusta le date successive di conseguenza.
+
+
+
+- **Integrazione con Google Calendar (o altri)**: Utilizzando le API di Google Calendar, il sistema crea eventi sul calendario personale dell’utente per ogni attività programmata. Ad esempio, “Ore 17:00 – 17:30, Ripasso Lezione Algebra: flashcard su teorema X e Y”. Ogni evento può contenere link utili (link al PDF degli appunti, o direttamente al punto del video su YouTube se disponibile, o alla pagina dell’interfaccia per eseguire il quiz). In questo modo lo studente riceve notifiche e promemoria sul proprio dispositivo come farebbe per qualsiasi altro impegno. Lato tecnico, l’utente dovrà autorizzare l’applicazione ad accedere al proprio calendario (OAuth2), dopodiché il backend (Python + libreria Google API) potrà inserire eventi.
+
+
+
+- **Personalizzazione**: Il piano di studio è adattato alle esigenze dell’utente. Si può impostare la data dell’esame o verifica, così il sistema concentra più ripassi man mano che essa si avvicina. L’utente può anche specificare la propria disponibilità (es. “non studio nel weekend” o “solo sera”) e il modulo di pianificazione collocherà gli eventi di conseguenza. Tutte queste preferenze sono memorizzate nel database per ciascun utente.
+
+
+
+Questo modulo chiude il ciclo di apprendimento: non solo genera materiali, ma aiuta anche a *utilizzarli* efficacemente. Dal punto di vista dell’architettura, esso attinge ai dati generati dagli altri moduli (flashcard, concetti chiave, ecc.) e interagisce con servizi esterni (Google Calendar). Può essere implementato come parte del backend Python (ad esempio un componente che, quando l’LLM ha finito di generare flashcard e quiz, immediatamente crea un piano e chiama le API di Calendar per popolarlo).
+
+
+
+*Tecnologie chiave*: Python con librerie per Calendar (ad es. google-api-python-client per Google Calendar). Un database relazionale (PostgreSQL) archivia le informazioni sulle schedulazioni, per evitare duplicati e per permettere eventuali modifiche/annullamenti. Potrebbe essere utile anche un modulo di ottimizzazione o AI semplice per bilanciare il carico (ad es. se più lezioni generano molte flashcard, distribuire i ripassi in modo da non sovraccaricare un singolo giorno). Il risultato visibile all’utente è comunque gestito tramite l’interfaccia (che potrebbe mostrare un calendario integrato o semplicemente lasciare che l’utente usi il proprio Google Calendar).
+
+
+
+## Interfaccia di Revisione Interattiva
+
+Tutti i moduli sopra descritti sono accessibili e controllabili tramite l’**Interfaccia Utente** del sistema, che è fondamentale per permettere a docenti e studenti di interagire con i contenuti generati. L’interfaccia è concepita come una web app **single-page application (SPA)** sviluppata in **React**, comunicante con il backend tramite **REST API** (fornite da FastAPI) e/o websocket per aggiornamenti in tempo reale. Le caratteristiche chiave dell’interfaccia:
+
+
+
+- **Dashboard dei Contenuti**: Una pagina che elenca le lezioni disponibili (acquisite dal modulo 1), con metadati come titolo, durata, stato di avanzamento dell’elaborazione (ad es. “trascrizione completata”, “in attesa di revisione”, “PDF pronto”). Da qui l’utente può avviare l’elaborazione di nuove lezioni o accedere a quelle già processate.
+
+
+
+- **Player Video Sincronizzato con Trascrizione**: La schermata principale di revisione per una lezione mostra il video affiancato al testo trascritto. Man mano che il video riproduce, la parte di trascrizione corrispondente viene evidenziata (karaoke-style highlighting). Ciò consente di seguire facilmente e verificare la correttezza della trascrizione. Se l’utente nota un errore (es. un termine tecnico mal riconosciuto), può cliccare sul testo e correggerlo manualmente. Ogni modifica viene salvata e tracciata. Lo stesso vale per il testo estratto dalle slide: l’interfaccia potrebbe mostrare l’immagine della slide e il testo OCR a fianco, permettendo di correggere eventuali imprecisioni (es. l’OCR ha sbagliato una lettera in una formula).
+
+
+
+- **Editor di Appunti LaTeX**: Una volta che la trascrizione/OCR sono accurati, l’utente può generare gli appunti strutturati (il backend effettua la chiamata all’LLM e la generazione LaTeX). Il risultato viene mostrato in un editor/testo LaTeX nell’interfaccia. Qui sia docenti che studenti possono rivedere l’organizzazione in sezioni, i paragrafi, le formule formattate. Possono apportare modifiche manuali minori direttamente nel codice LaTeX se necessario (ad esempio correggere la nomenclatura di una formula, cambiare un titolo di sezione, aggiungere un commento esplicativo). Un **preview PDF** istantaneo (o quasi, tramite compilazione LaTeX sul server) aiuta a vedere il risultato finale di tali modifiche.
+
+
+
+- **Validazione e Approvazione**: L’interfaccia consente a diversi ruoli di interagire. Un docente ad esempio potrebbe caricare la lezione e poi, tramite l’editor, apportare correzioni e infine **approvare** gli appunti generati affinché vengano distribuiti agli studenti. Lo studente invece potrebbe usare l’interfaccia in modalità più limitata, principalmente per visualizzare, inserire annotazioni personali e scaricare il PDF. In ogni caso, prima che il documento sia considerato “finale”, il sistema potrebbe richiedere un’azione di conferma (es. *“Confermi che gli appunti sono corretti e pronti per l’uso?”*).
+
+
+
+- **Visualizzazione Materiali Intelligenti**: La web app include sezioni dedicate per i riassunti, le mappe concettuali e le flashcard/quiz. Ad esempio, una scheda “Mappa Concettuale” mostra il grafo interattivo dei concetti: l’utente può cliccare su un nodo (argomento) per evidenziarne le connessioni; eventuali errori (un concetto errato o un collegamento sbagliato) possono essere segnalati e corretti magari rimuovendo quel nodo. Una scheda “Flashcard” permette di scorrere le flashcard generate: qui lo studente può marcare quelle che ha memorizzato bene (così il sistema le schedula meno frequentemente) o segnalare flashcard non pertinenti da rimuovere. La parte “Quiz” può permettere di svolgere il quiz direttamente online e vedere il punteggio ottenuto, con commenti sulle risposte sbagliate (generati anch’essi dall’LLM, spiegando perché la risposta corretta era un’altra).
+
+
+
+- **Download e Integrazioni**: Infine, l’interfaccia fornisce opzioni per scaricare il PDF finale degli appunti strutturati. Può anche offrire l’esportazione delle flashcard in formato Anki, e il collegamento al modulo di calendario (ad esempio un pulsante “Sincronizza piano di studio su Google Calendar” che, una volta premuto, avvia il processo di creazione eventi).
+
+
+
+Dal punto di vista implementativo, questo front-end React comunica con un backend FastAPI che espone endpoint REST per ogni funzionalità (es: POST /api/process_video per avviare l’analisi di un video, GET /api/transcription/{id} per ottenere la trascrizione, PUT /api/transcription/{id} per salvare una correzione, POST /api/generate_notes/{id} per lanciare l’LLM sugli appunti, etc.). Per le parti in tempo reale (come l’aggiornamento della trascrizione durante la riproduzione video, o lo stato di avanzamento della generazione), si utilizzano **WebSocket** (forniti anch’essi da FastAPI tramite FastAPI.websocket): il backend può così inviare messaggi all’interfaccia (es. percentuale di completamento dell’ASR, oppure notifica “LLM completato, appunti pronti”).
+
+
+
+*Tecnologie chiave*: **React** + **Redux** (o altri state manager) per il front-end, con componenti per video player (ad es. usando Video.js o API HTML5 video), editor LaTeX (ci sono componenti open-source o si può integrare Monaco Editor con sintassi LaTeX), librerie grafiche per mappe (D3, vis.js), e componenti UI (Material-UI/AntD per design pulito). **FastAPI** (Python) per il backend API, eventualmente servito via **Uvicorn/Gunicorn**. **PostgreSQL** come database per persistenza (acceduto dal backend via ORM tipo SQLAlchemy). **Auth**: gestione autenticazione utenti per separare i contenuti per utente/corso, usando JWT o OAuth (soprattutto per integrazione con Google). Tutta l’app potrà essere containerizzata in Docker per facilitare il deployment su server cloud.
+
+
+
+## Scalabilità e Deployment
+
+Fin dall’inizio, il sistema è progettato pensando alla scalabilità, ossia alla capacità di gestire un numero crescente di lezioni, utenti e richieste senza degradare le prestazioni. I punti chiave per l’infrastruttura e il deployment sono:
+
+
+
+- **Architettura Modulabile e Distribuibile**: Ogni principale funzione può risiedere in un servizio separato se necessario. In un’implementazione semplice, tutti i moduli girano sullo stesso server/processo. Ma in previsione di carichi elevati, si può passare a un’architettura a microservizi: ad esempio un servizio dedicato per l’ASR (magari con GPU se disponibile), uno per l’OCR, uno per le richieste LLM (che potrebbero chiamare API esterne o modelli su un server dedicato), e un servizio web principale per orchestrare e servire le richieste utente. Comunicazione tra servizi può avvenire tramite code (RabbitMQ/Redis) o REST API interne.
+
+
+
+- **Caching Strategico**: Molte operazioni del sistema sono costose (transcrivere un’ora di lezione, interrogare GPT-4 su un lungo prompt, ecc.), pertanto il caching è fondamentale. Si implementeranno cache a vari livelli:
+
+- **Cache dei risultati di analisi**: se uno specifico video è già stato elaborato, i risultati di ASR e OCR vengono memorizzati (su database e magari su file system). Se per errore l’analisi viene rieseguita o viene richiesta due volte, il sistema può riutilizzare i risultati salvati invece di ricalcolarli.
+
+- **Cache dei prompt LLM**: se piccoli aggiornamenti non sostanziali sono fatti (ad es. correzione ortografica insignificante), il sistema potrebbe evitare di rigenerare tutto con l’LLM, conservando l’output precedente. In caso di rigenerazione, si può anche memorizzare l’output LLM per possibili confronti o revert.
+
+- **Caching sul front-end**: l’app React può memorizzare localmente (in Redux store o IndexedDB) i dati già scaricati, come la trascrizione, in modo da non richiamare l’API ripetutamente.
+
+- **Content Delivery**: file pesanti come video o PDF possono essere serviti tramite un CDN o bucket cloud (S3 o equivalenti) con caching, invece di passare sempre per il server applicativo.
+
+- **Cache di database e vettoriale**: uso di Redis o memcached per mantenere in RAM i risultati di query frequenti al database, oppure per accelerare query di similarità su FAISS (che già è ottimizzato in RAM).
+
+
+
+- **Database Ottimizzato**: PostgreSQL viene utilizzato per archiviare testi, note, schedulazioni, ecc. Per mantenere buone performance, vanno create le giuste indici (es. indice full-text su trascrizioni per ricerche rapide di parole chiave, indice per id video/timestamp su tabelle di trascrizione per accesso veloce). Inoltre, per le ricerche semantiche, FAISS potrebbe girare separatamente ma sincronizzato con il DB (ad esempio, ogni nuovo appunto generato produce embedding che vengono inseriti in una struttura FAISS per poter fare query tipo “trova dove si parla del concetto X in tutte le lezioni”).
+
+
+
+- **Deployment in Produzione**: Si prevede l’uso di **Docker** per impacchettare l’applicazione, con separazione ad es. in 3 container principali: webapp (FastAPI + React servito via nginx), worker (processi background per ASR/OCR/LLM), db (Postgres + possibili servizi come Redis e FAISS). In uno scenario più grande, orchestrando con **Kubernetes** si possono scalare orizzontalmente i worker (ad esempio avere N pod dedicati alla trascrizione audio se molti video vengono caricati simultaneamente).
+
+Il codice sarà open-source, basato su Python e librerie note, per cui è facilmente deployabile su qualsiasi piattaforma che supporti Docker. Lo stack open-source evita costi di licenza e permette a comunità o università di personalizzare il sistema.
+
+
+
+- **Monitoraggio e Logging**: In produzione, servizi come **Prometheus/Grafana** possono monitorare l’utilizzo (CPU, memoria, numero di job in coda), mentre un sistema di logging aggregato (Elastic Stack o semplicemente file log su server) aiuta a tracciare eventuali errori nei moduli (es. fallo nel riconoscimento di una formula, o chiamata API esterna fallita). Ciò aiuta a mantenere il sistema affidabile e a individuare colli di bottiglia da ottimizzare.
+
+
+
+In sintesi, l’infrastruttura è pensata per crescere: inizialmente si può far girare tutto su una singola macchina per sviluppo e test, ma gradualmente si hanno le basi per distribuirne i componenti e gestire un maggior numero di utenti contemporanei. L’uso di tecnologie come FastAPI, PostgreSQL e React garantisce supporto e aggiornamenti dalla community, e un ecosistema robusto di estensioni (ad esempio, potremmo integrare facilmente un servizio di autenticazione esterno, o sostituire il database con una soluzione cloud se necessario).
+
+
+
+## Interconnessioni e Flusso dei Dati
+
+È importante chiarire come i moduli sopra descritti interagiscono tra loro in un flusso end-to-end. Il flusso tipico dei dati attraverso il sistema integrato è il seguente:
+
+
+
+1. **Ingestione**: L’utente (o un processo automatico schedulato) segnala una nuova lezione da elaborare. Il modulo di Acquisizione scarica il video e i materiali correlati, li salva e registra un nuovo record nel database (stato “In attesa di elaborazione”).
+
+2. **Avvio Pipeline di Analisi**: Il backend (FastAPI) riceve la richiesta di processare quel contenuto. In risposta, mette in coda un job per il modulo di Analisi Multimodale. (Se il sistema usa un task queue, qui ad esempio un worker Celery prende in carico il job).
+
+3. **Trascrizione e OCR**: Il video viene caricato dal worker ASR: estrae l’audio, effettua la trascrizione con Whisper ottenendo testo + timestamp. In parallelo, un processo OCR analizza il video per estrarre testi da slide e lavagna, interagendo con modelli e servizi (TrOCR, Mathpix) e ottenendo anch’esso output testuali con riferimenti temporali.
+
+4. **Salvataggio risultati grezzi**: Man mano che trascrizione e OCR producono risultati, questi vengono salvati su DB. Ad esempio, la tabella Transcription conterrà frasi con timestamp; la tabella VisualText conterrà elementi dalle slide con timestamp; la tabella Formula conterrà le formule LaTeX estratte. A questo punto l’interfaccia utente potrebbe già permettere di vedere la trascrizione provvisoria anche se gli appunti strutturati non sono ancora generati.
+
+5. **Aggregazione e generazione appunti**: Terminata l’analisi, il sistema aggrega tutto in un prompt e chiama l’LLM tramite il modulo di Generazione Appunti. Fornisce al modello l’intera trascrizione e i dati OCR. L’LLM risponde con il testo formattato degli appunti. Il backend salva questo output (in una tabella NotesDraft ad esempio) e procede a costruire il file LaTeX integrandolo nel template.
+
+6. **Revisione Interattiva**: L’utente viene notificato che una bozza di appunti è pronta. Tramite l’interfaccia, accede all’editor dove vede testo e/o PDF. Se trova errori (contenuto mancante o errato), li corregge. Le correzioni minori (es. refusi) magari vengono applicate direttamente sul LaTeX. Correzioni maggiori (es. un intero paragrafo da rigenerare) potrebbero portare a chiamare nuovamente l’LLM con un prompt aggiornato. Questa iterazione continua finché utente/docente è soddisfatto.
+
+7. **Generazione Output Extra**: Quando gli appunti sono confermati, il sistema genera anche i materiali extra: riassunto, mappa concettuale, flashcard, quiz. Questi possono essere generati in background mentre l’utente revisiona, oppure subito dopo l’approvazione degli appunti. In ogni caso, una volta pronti, vengono resi disponibili nell’interfaccia (schede dedicate) e possono anch’essi essere modificati se necessario (es. l’utente potrebbe editare una flashcard mal formulata).
+
+8. **Finalizzazione**: Il PDF finale viene compilato, incorporando eventuali appendici (ad esempio un allegato con le soluzioni dei quiz, o la mappa concettuale in un capitolo finale). Il file PDF viene salvato (es. in un bucket cloud o sul server) e un link di download appare nell’interfaccia.
+
+9. **Pianificazione**: Contestualmente, il modulo di Piano di Studio elabora i dati finali: sa quanti flashcard e quanti concetti chiave ci sono, quindi propone un piano. Se l’utente acconsente (o ha pre-configurato l’auto-schedulazione), il sistema crea gli eventi sul Google Calendar dell’utente e magari mostra un messaggio tipo “5 eventi aggiunti al tuo calendario per i prossimi ripassi”.
+
+10. **Aggiornamenti Continui**: Man mano che l’utente utilizza i materiali (ad esempio facendo i quiz online o segnando flashcard come “conosciuta/sconosciuta”), il sistema aggiorna il database (es. marcando quali concetti sono stati assimilati) e può adeguare il piano di studio (es. spostare in avanti o cancellare un ripasso non più necessario, o aggiungerne un ulteriore per concetti ancora ostici). Questa interazione post-lezione chiude il cerchio e prepara per eventuali lezioni successive.
+
+
+
+In termini di *interconnessioni*, i moduli comunicano principalmente tramite il database condiviso e chiamate tra componenti Python: il modulo di analisi, una volta finito, invoca quello di generazione (o ne restituisce i dati ad un orchestratore centrale che poi chiama il successivo). Possiamo pensare a un orchestratore (ad esempio implementato nel main.py del progetto) che svolge il ruolo di controller: sequenzia i passi e passa l’output di un modulo come input al seguen ([repomix-output.txt](file://file-5dYFmaZrXFoyLCDNYPQtHu#:~:text=match%20at%20L198%20,generate_content%28%20transcription%3Dtranscription))6】. In un contesto distribuito, questo orchestratore potrebbe essere il servizio FastAPI stesso coordinando vari microservizi. L’uso di formati standard (JSON per dati intermedi, file LaTeX per output, HTTP per comunicazione) assicura che i confini tra moduli siano ben definiti.
+
+
+
+# Stack Tecnologico e Scelte di Progetto
+
+Il sistema fa leva su un insieme di tecnologie open-source moderne, scelte per soddisfare requisiti di performance, affidabilità e flessibilità:
+
+
+
+- **Linguaggio e Backend**: **Python** è il linguaggio centrale, data la sua ricchezza di librerie per AI (trascrizione, OCR, NLP) e per il web. Permette di integrare facilmente modelli pre-addestrati e servizi esterni. Il framework **FastAPI** è scelto per costruire l’API web RESTful in modo semplice ed efficiente, con supporto nativo per async IO (utile se serviamo più richieste contemporaneamente, ad esempio streaming di risultati) e per la documentazione automatica (OpenAPI docs per le API).
+
+
+
+- **Front-end**: **React** è utilizzato per creare una SPA reattiva e veloce. La scelta di React (anziché server-side rendering) è motivata dall’elevata interattività richiesta (video player sincronizzato, editor in tempo reale, grafici dinamici). React, insieme a librerie come Material-UI, offre un’esperienza utente moderna. Inoltre, la comunità React facilita l’integrazione di componenti specialistici (es. ci sono componenti per visualizzare PDF, per editor di testo avanzati, etc.).
+
+
+
+- **Database**: **PostgreSQL** è il database relazionale per persistere i dati strutturati (trascrizioni, note, utenti, piani di studio, ecc.). PostgreSQL è affidabile, supporta JSON (qualora serva memorizzare qualche struttura semi-strutturata), e con estensioni come pg_trgm può supportare ricerche full-text in italiano (utile per permettere agli utenti di cercare parole chiave nelle trascrizioni). Per la parte non relazionale (embedding vettoriali per concetti) PostgreSQL può essere affiancato da **FAISS**, che non è un servizio separato ma una libreria in-process: l’app Python carica in memoria gli indici FAISS per fare query di similarità su vettori (embedding generati magari con modelli tipo SBERT o direttamente dall’LLM). Questa combinazione copre sia query esatte (SQL) sia semantiche.
+
+
+
+- **Caching e Message Queue**: Per il caching in-memory dei dati più usati e per la comunicazione tra componenti, si prevede l’uso di **Redis**. Redis può fungere sia da cache (ad esempio caching di risultati LLM: chiave = hash del prompt, valore = risposta, per evitare duplicazioni) sia da broker per una **coda di messaggi** Celery (nel caso implementassimo i moduli come task asincroni). In alternativa a Celery, si può usare **RQ** o il semplice AsyncTask di FastAPI; la scelta di Redis come broker permette flessibilità e rapidità.
+
+
+
+- **AI e Machine Learning**: Il sistema sfrutta vari modelli e servizi: Whisper (open source by OpenAI) per ASR, Tesseract/TrOCR/Mathpix per OCR, CLIP/BLIP per immagini, GPT-4 (OpenAI API) o LLaMA 2 (on-premise) per LLM. Tutti questi possono girare grazie a Python (spesso via librerie pip). È importante modularizzare l’accesso a questi modelli in modo da poterli sostituire: ad esempio, definire interfacce come SpeechTranscriber, TextRecognizer, ContentSummarizer con implementazioni diverse (Whisper vs Google, OpenAI GPT-4 vs local GPT). Così l’utente potrebbe configurare opzioni (es: usare solo componenti open-source offline, oppure servizi cloud più accurati).
+
+
+
+- **Web Server e Deployment**: Utilizzo di **Uvicorn** come ASGI server per FastAPI, spesso dietro un reverse proxy come **Nginx** (che può servire la parte statica della webapp React e gestire SSL). Il tutto containerizzato con **Docker** per coerenza tra ambienti di sviluppo e produzione. Come citato, in ambienti complessi, orchestrazione con **Kubernetes** su cloud (AWS, GCP, Azure) faciliterebbe il bilanciamento di carico. Tuttavia, il core rimane open-source e deployabile anche su un singolo server fisico (ad esempio, un server universitario) senza requisiti proprietari.
+
+
+
+- **Altre tecnologie**: Librerie come **OpenCV** (manipolazione video/frame), **PyTorch** (se si usano modelli deep custom), **NLTK/Spacy** (per elaborazioni linguistiche aggiuntive, se servono), **NetworkX** (per costruire grafi concettuali) arricchiscono il toolset tecnico. Per la generazione di contenuti da includere nel PDF: **Matplotlib** o **LaTeX** stesso per generare grafici se necessario, **GraphViz** (via python-graphviz) per disegnare mappe se in forma di grafo.
+
+
+
+In termini di scelte progettuali, l’enfasi è su: **open-source**, modularità, e aderenza a standard. Questo garantisce che il sistema possa essere mantenuto e migliorato nel tempo dalla comunità o da sviluppatori futuri, e che possa integrarsi con ecosistemi esistenti (LMS, applicazioni di calendario, etc.) con relativa facilità.
+
+
+
+# Piano di Sviluppo Progressivo
+
+Data la complessità del sistema, è fondamentale pianificare lo sviluppo in fasi incrementali, ottenendo di volta in volta sotto-sistemi funzionanti (MVP – Minimum Viable Product) da testare e validare con utenti reali. Un possibile piano di sviluppo progressivo è il seguente:
+
+
+
+**Fase 1: MVP – Trascrizione e PDF di base**
+
+- *Obiettivo:* Realizzare il nucleo minimo funzionante: caricare un video, ottenere la trascrizione testuale e generare un PDF semplice con il testo trascritto.
+
+- *Funzionalità chiave da implementare:* Integrazione di Whisper per ASR, semplice interfaccia (anche CLI inizialmente) per fornire un video e restituire un file PDF con trascrizione lineare. Setup del progetto con FastAPI e test di una chiamata base (/api/transcribe).
+
+- *Output:* PDF contenente la trascrizione del video (senza grossa formattazione).
+
+- *Validazione:* Verificare l’accuratezza della trascrizione su alcuni video di esempio, e la robustezza del sistema nel gestire video più lunghi.
+
+
+
+**Fase 2: Integrazione OCR e Strutturazione Note**
+
+- *Obiettivo:* Ampliare l’analisi includendo OCR per slide e scritti e introdurre la generazione di appunti strutturati in LaTeX tramite LLM.
+
+- *Funzionalità chiave:* Implementare il modulo di OCR avanzato: estrarre testo da slide (usando ad esempio pytesseract) e invocare Mathpix API su screenshot di formule. Integrare questi risultati con la trascrizione. Sviluppare il prompt e logica per chiamare GPT-3.5/GPT-4 (inizialmente può bastare GPT-3.5 per test) per creare il testo formattato. Implementare il modulo LaTeX per generare un .tex unendo i contenuti (si può predisporre il template LaTeX in questa fase).
+
+- *Output:* PDF arricchito con formattazione gerarchica (sezioni, sottosezioni) e formule matematiche riconosciute.
+
+- *Validazione:* Controllare che le formule nel PDF corrispondano a quelle nelle slide/lavagna, che la suddivisione in sezioni sia sensata. Coinvolgere magari qualche studente/docente pilota per feedback sulla qualità degli appunti generati.
+
+
+
+**Fase 3: Interfaccia Utente e Workflow di Revisione**
+
+- *Obiettivo:* Passare da un processo offline/CLI a un sistema interattivo web, dove l’utente possa vedere e correggere i risultati prima della finalizzazione.
+
+- *Funzionalità chiave:* Sviluppare l’interfaccia React con le componenti principali: upload video, lista lezioni, player con trascrizione sincronizzata, editor di testo LaTeX con anteprima PDF. Implementare nel backend le API necessarie per alimentare l’interfaccia (endpoint per caricare file, ottenere stato elaborazione, inviare correzioni). Introdurre WebSocket per notificare completamenti asincroni (trascrizione finita, ecc.).
+
+- *Output:* Un’applicazione web locale in cui si può caricare un video, vedere avanzare l’elaborazione in tempo reale, e infine visualizzare/modificare il documento LaTeX generato.
+
+- *Validazione:* Usabilità dell’interfaccia (test con utenti non tecnici per vedere se riescono a seguire il processo), e verifica che le modifiche dall’UI vengano correttamente applicate (es: correggere una formula dal LaTeX e rigenerare il PDF con successo).
+
+
+
+**Fase 4: Output Intelligenti (riassunto, flashcard, mappe, quiz)**
+
+- *Obiettivo:* Ampliare le funzionalità didattiche creando materiali di studio addizionali.
+
+- *Funzionalità chiave:* Per ciascun tipo di output: sviluppare la logica backend e magari usare prompt LLM dedicati. Ad esempio, implementare una funzione generate_summary(notes) che con GPT produce il riassunto in punti; una generate_flashcards(notes) che estrae Q&A; una generate_quiz(notes) per domande a scelta multipla. Per la mappa concettuale, iniziare semplicemente estraendo i titoli delle sezioni e chiedendo all’LLM relazioni, poi iterare migliorando (eventualmente integrando embedding + clustering per confermare i concetti chiave). Costruire le sezioni UI corrispondenti (es. un componente React per visualizzare Q&A, uno per la mappa concettuale usando una libreria di grafi).
+
+- *Output:* Riassunto testuale, elenco di flashcard, quiz in formato JSON (o LaTeX). Visualizzazione di una mappa concettuale interattiva nell’UI.
+
+- *Validazione:* Far testare questi materiali a un gruppo di studenti: il riassunto rispecchia il contenuto? Le flashcard sono utili e corrette? La mappa concettuale ha senso logico? Raccogliere correzioni ed eventualmente permettere editing manuale anche di questi (ad es. possibilità di eliminare flashcard poco rilevanti dall’UI).
+
+
+
+**Fase 5: Piano di Studio e Integrazione Calendar**
+
+- *Obiettivo:* Chiudere il cerchio formativo aggiungendo la componente di calendarizzazione e ripasso attivo.
+
+- *Funzionalità chiave:* Implementare l’algoritmo di schedulazione (es. generare eventi a 1-3-7 giorni per ogni lezione, oppure integrare con un algoritmo SRS più avanzato). Configurare l’app Google API per creare eventi: sviluppare un endpoint backend POST /api/schedule/{lesson_id} che genera gli eventi; gestire OAuth2 per ottenere permessi Calendar. In UI, aggiungere opzioni di preferenza (es. “Aggiungi automaticamente promemoria di ripasso” o slider per intensità di ripasso).
+
+- *Output:* Eventi reali sul calendario dell’utente e visualizzazione in UI (magari un semplice calendario con i giorni evidenziati).
+
+- *Validazione:* Verificare che gli eventi creati su Google Calendar corrispondano a quanto previsto (giusto intervallo di giorni, titolo e descrizione corretti). Far controllare agli utenti se trovano utile/adeguato il piano proposto, con eventuali aggiustamenti (ad es. numero di ripassi, durata sessioni).
+
+
+
+**Fase 6: Hardening, Scalabilità e Deploy**
+
+- *Obiettivo:* Rendere il sistema pronto per un uso reale in produzione, ottimizzando performance e stabilità.
+
+- *Funzionalità chiave:* Profilare l’applicazione con diversi scenari (una lezione lunga, più lezioni in parallelo) per individuare colli di bottiglia. Introdurre caching dove mancante (ad es. risultati di trascrizione su disco, re-use di risultati LLM quando possibile). Test di carico sul backend (es. usando locust o JMeter per vedere tenuta di FastAPI). Contenainerizzare l’app e testare la deploy su un servizio cloud (ad es. AWS ECS/Fargate, Heroku, etc.). Migliorare la gestione errori: assicurarsi che se un modulo fallisce (es. API Mathpix non risponde) il sistema avvisa l’utente senza rompersi completamente, e permette retry. Scrivere documentazione completa (README, guide) per sviluppatori e per utenti finali.
+
+- *Output:* Versione 1.0 stabile del sistema, con immagini Docker pronte, documentazione e magari un primo **deployment** su un server accessibile (fase pilota con un gruppo ristretto).
+
+- *Validazione:* Testing finale end-to-end con scenari completi: un docente carica 5 video in una volta, elabora tutto, uno studente ne utilizza 3, ecc., per verificare che la coda gestisca bene, che non vi siano memory leak, che tutti i moduli rispondano correttamente sotto stress. Prevedere anche un periodo di beta testing con utenti reali per raccogliere bug e feedback aggiuntivi.
+
+
+
+Ogni fase costruisce sulla precedente, garantendo che il sistema sia sempre funzionante in ogni stadio (approccio incrementale). È importante anche adottare pratiche di **version control** (Git) sin dall’inizio, magari con integrazione CI/CD per eseguire test automatici (ad es. test su spezzoni di video brevi per controllare che la pipeline dia output attesi). In parallelo allo sviluppo, mantenere il dialogo con gli utenti (docenti e studenti) per capire le priorità: ad esempio, si potrebbe scoprire che la funzionalità di riassunti è più urgente e anticiparla, o che l’OCR di formule ha qualche difficoltà specifica in certe materie e concentrarsi a migliorarla.
+
+
+
+Con questo piano, nell’arco di sviluppo si riesce gradualmente a integrare i due progetti originari (analisi video + strumenti di studio) in un unico ecosistema coeso. Il risultato finale sarà un sistema potente che dall’acquisizione dei contenuti grezzi arriva fino al supporto attivo allo studio, passando per generazione automatica di materiale didattico di alta qualità – il tutto ottimizzato per scalare e adattarsi a diversi contesti educativi.

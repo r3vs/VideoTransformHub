@@ -46,7 +46,7 @@ export default function CreateCourse() {
 
       // Use the correct schema for the API
       const response = await apiRequest("POST", "/api/courses", courseData);
-      
+
       console.log("API Response:", response); // Debug log
 
       toast({
@@ -94,6 +94,7 @@ export default function CreateCourse() {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="description"
