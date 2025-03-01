@@ -4,6 +4,8 @@ import { type Course, type Material } from "@shared/schema";
 import { ContentUpload } from "@/components/ContentUpload";
 import { MaterialViewer } from "@/components/MaterialViewer";
 import { StudyPlan } from "@/components/StudyPlan";
+import { MoodleScraper } from "@/components/MoodleScraper";
+import { FolderUpload } from "@/components/FolderUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -52,11 +54,23 @@ export default function Course() {
         </TabsList>
 
         <TabsContent value="materials">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div>
               <ContentUpload
                 courseId={courseId}
                 onUpload={handleUploadSuccess}
+              />
+            </div>
+            <div>
+              <MoodleScraper
+                courseId={courseId}
+                onSuccess={handleUploadSuccess}
+              />
+            </div>
+            <div>
+              <FolderUpload
+                courseId={courseId}
+                onSuccess={handleUploadSuccess}
               />
 
               <Card className="mt-6">

@@ -19,6 +19,7 @@ export interface IStorage {
   getMaterial(id: number): Promise<Material | undefined>;
   getMaterialsByCourse(courseId: number): Promise<Material[]>;
   createMaterial(material: InsertMaterial): Promise<Material>;
+  createMaterialsFromFolder(courseId: number, filesData: any[]): Promise<Material[]>; // Added
   updateMaterialAnalysis(id: number, analysis: string, summary: string): Promise<Material>;
 
   // Study Plans
@@ -109,6 +110,28 @@ export class MemStorage implements IStorage {
     const newMaterial: Material = { ...material, id, analysis: null, summary: null };
     this.materials.set(id, newMaterial);
     return newMaterial;
+  }
+
+  async createMaterialsFromFolder(courseId: number, filesData: any[]): Promise<Material[]> {
+    const newMaterials: Material[] = [];
+    for (const fileData of filesData) {
+      const id = this.currentId.materials++;
+      const newMaterial: Material = {
+        id,
+        courseId,
+        title: fileData.originalname,
+        type: fileData.mimetype.includes('pdf') ? 'pdf' :
+              fileData.mimetype.includes('video') ? 'video' : 'text',
+        content: `Uploaded file: ${fileData.originalname}`,
+        sourcePath: fileData.path,
+        createdAt: new Date(),
+        analysis: null,
+        summary: null
+      };
+      this.materials.set(id, newMaterial);
+      newMaterials.push(newMaterial);
+    }
+    return newMaterials;
   }
 
   async updateMaterialAnalysis(id: number, analysis: string, summary: string): Promise<Material> {

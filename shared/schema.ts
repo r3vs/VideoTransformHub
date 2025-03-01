@@ -13,15 +13,17 @@ export const courses = pgTable("courses", {
   userId: integer("user_id").notNull(),
   title: text("title").notNull(),
   description: text("description"),
+  moodleUrl: text("moodle_url"), // Added for Moodle URL
 });
 
 export const materials = pgTable("materials", {
   id: serial("id").primaryKey(),
   courseId: integer("course_id").notNull(),
-  type: text("type").notNull(), // video, pdf, text
+  type: text("type").notNull(), // video, pdf, text, folder
   content: text("content").notNull(), // file path or text content
   analysis: text("analysis"), // Gemini analysis output
   summary: text("summary"),
+  sourcePath: text("source_path") // Added for source path
 });
 
 export const studyPlans = pgTable("study_plans", {
@@ -48,17 +50,21 @@ export const insertUserSchema = createInsertSchema(users).pick({
 });
 
 export const insertCourseSchema = createInsertSchema(courses).pick({
+  userId: true,
   title: true,
   description: true,
+  moodleUrl: true, // Added for Moodle URL
 });
 
 export const insertMaterialSchema = createInsertSchema(materials).pick({
   courseId: true,
   type: true,
   content: true,
+  sourcePath:true //added for source path
 });
 
 export const insertStudyPlanSchema = createInsertSchema(studyPlans).pick({
+  userId: true,
   courseId: true,
   title: true,
   startDate: true,
@@ -71,11 +77,20 @@ export const insertStudyTaskSchema = createInsertSchema(studyTasks).pick({
   dueDate: true,
 });
 
+// Moodle Scraping Schema (Zod)
+export const moodleScrapingSchema = z.object({
+  courseId: z.number(),
+  moodleUrl: z.string().url(),
+  username: z.string().optional(),
+  password: z.string().optional()
+});
+
 export type User = typeof users.$inferSelect;
 export type Course = typeof courses.$inferSelect;
 export type Material = typeof materials.$inferSelect;
 export type StudyPlan = typeof studyPlans.$inferSelect;
 export type StudyTask = typeof studyTasks.$inferSelect;
+export type MoodleScraping = z.infer<typeof moodleScrapingSchema>;
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
