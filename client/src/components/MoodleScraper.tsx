@@ -4,16 +4,18 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 const moodleScraperSchema = z.object({
-  moodleUrl: z.string().url({ message: "Please enter a valid Moodle URL" }),
+  moodleUrl: z.string().url({ message: "Inserisci un URL Moodle valido" }),
   username: z.string().optional(),
   password: z.string().optional(),
+  autoLogin: z.boolean().default(false),
 });
 
 type MoodleScraperValues = z.infer<typeof moodleScraperSchema>;
@@ -33,6 +35,7 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
       moodleUrl: "",
       username: "",
       password: "",
+      autoLogin: false,
     },
   });
 
@@ -118,6 +121,29 @@ export function MoodleScraper({ courseId, onSuccess }: MoodleScraperProps) {
                     <Input type="password" placeholder="Moodle password" {...field} />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="autoLogin"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Autenticazione automatica
+                    </FormLabel>
+                    <FormDescription>
+                      Consenti al sistema di accedere automaticamente al portale.
+                    </FormDescription>
+                  </div>
                 </FormItem>
               )}
             />

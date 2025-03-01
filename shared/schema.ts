@@ -82,7 +82,8 @@ export const moodleScrapingSchema = z.object({
   courseId: z.number(),
   moodleUrl: z.string().url(),
   username: z.string().optional(),
-  password: z.string().optional()
+  password: z.string().optional(),
+  autoLogin: z.boolean().default(false),
 });
 
 export type User = typeof users.$inferSelect;
