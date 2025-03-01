@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCourseSchema, type InsertCourse } from "@shared/schema";
@@ -38,7 +37,7 @@ export default function CreateCourse() {
     try {
       // Get the current user to extract the userId
       const user = await apiRequest("GET", "/api/auth/user");
-      
+
       // Prepara i dati del corso nel formato corretto
       const courseData = {
         title: data.title,
@@ -46,20 +45,24 @@ export default function CreateCourse() {
         moodleUrl: data.moodleUrl || "",
         userId: user.id
       };
-      
-      await apiRequest("POST", "/api/courses", courseData);
-      
+
+      const response = await apiRequest("POST", "/api/courses", courseData);
+
       toast({
         title: "Course created",
         description: "You will be redirected to the dashboard"
       });
-      
-      setLocation("/");
+
+      // Breve timeout prima del reindirizzamento per permettere al toast di essere visualizzato
+      setTimeout(() => {
+        setLocation("/");
+      }, 1000);
     } catch (error) {
       console.error("Error creating course:", error);
+
       toast({
-        title: "Failed to create course",
-        description: "Please try again",
+        title: "Errore",
+        description: "Impossibile creare il corso. Riprova.",
         variant: "destructive"
       });
     }
