@@ -41,7 +41,7 @@ export default function ContentUpload({ courseId, onUploadSuccess }: ContentUplo
         formData.append('files', file);
       });
 
-      const response = await fetch(`/api/courses/${courseId}/upload`, {
+      const response = await fetch(`/api/courses/${courseId}/materials/upload`, {
         method: 'POST',
         body: formData,
         credentials: 'include'
