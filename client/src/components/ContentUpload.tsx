@@ -1,117 +1,174 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertMaterialSchema } from "@shared/schema";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+
+import { useState, useRef } from "react";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { toast } from "./ui/use-toast";
+import { Upload, ChevronUp, ChevronDown, File as FileIcon } from "lucide-react";
 
 interface ContentUploadProps {
-  courseId: number;
-  onUpload: () => void;
+  courseId: string;
+  onUploadSuccess: () => void;
 }
 
-export function ContentUpload({ courseId, onUpload }: ContentUploadProps) {
-  const [uploading, setUploading] = useState(false);
-  const { toast } = useToast();
+export default function ContentUpload({ courseId, onUploadSuccess }: ContentUploadProps) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [showFileList, setShowFileList] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm({
-    resolver: zodResolver(insertMaterialSchema),
-    defaultValues: {
-      courseId,
-      type: "text",
-      content: ""
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setSelectedFiles(prev => [...prev, ...newFiles]);
     }
-  });
+  };
 
-  async function onSubmit(data: any) {
-    setUploading(true);
+  const handleUpload = async () => {
+    if (selectedFiles.length === 0) {
+      toast({
+        title: "Nessun file selezionato",
+        description: "Seleziona almeno un file da caricare",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
     try {
-      const res = await fetch(`/api/courses/${courseId}/materials`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+      const formData = new FormData();
+      selectedFiles.forEach(file => {
+        formData.append('files', file);
       });
 
-      if (!res.ok) throw new Error("Upload failed");
-      
-      toast({
-        title: "Content uploaded",
-        description: "Your content is being analyzed"
+      const response = await fetch(`/api/courses/${courseId}/upload`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
       });
-      
-      onUpload();
-    } catch (error) {
+
+      if (!response.ok) {
+        throw new Error('Errore durante il caricamento dei file');
+      }
+
       toast({
-        title: "Upload failed",
-        description: "Please try again",
+        title: "Caricamento completato",
+        description: `${selectedFiles.length} file caricati con successo`
+      });
+
+      setSelectedFiles([]);
+      onUploadSuccess();
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      toast({
+        title: "Errore di caricamento",
+        description: "Si è verificato un errore durante il caricamento dei file",
         variant: "destructive"
       });
     } finally {
-      setUploading(false);
+      setIsUploading(false);
     }
-  }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.files) {
+      const newFiles = Array.from(e.dataTransfer.files);
+      setSelectedFiles(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Upload Content</CardTitle>
+        <CardTitle>Carica Materiali Didattici</CardTitle>
       </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Content Type</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
+      <CardContent className="space-y-4">
+        <div
+          className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors"
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          onClick={triggerFileInput}
+        >
+          <Upload className="h-10 w-10 mx-auto mb-3 text-gray-400" />
+          <p className="text-sm text-gray-500 mb-1">
+            Trascina i file qui o clicca per selezionarli
+          </p>
+          <p className="text-xs text-gray-400">
+            Supporta tutti i formati di file (PDF, DOC, PPT, video, immagini, ecc.)
+          </p>
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            multiple
+            onChange={handleFileChange}
+          />
+        </div>
+
+        {selectedFiles.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <p className="text-sm font-medium">
+                {selectedFiles.length} file selezionati
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowFileList(!showFileList)}
+              >
+                {showFileList ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+
+            {showFileList && (
+              <ul className="space-y-2 max-h-40 overflow-y-auto">
+                {selectedFiles.map((file, index) => (
+                  <li
+                    key={index}
+                    className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded"
                   >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select content type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="text">Text</SelectItem>
-                      <SelectItem value="pdf">PDF</SelectItem>
-                      <SelectItem value="video">Video</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
+                    <div className="flex items-center">
+                      <FileIcon className="h-4 w-4 mr-2 text-blue-500" />
+                      <span className="truncate max-w-[200px]">{file.name}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveFile(index)}
+                    >
+                      &times;
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
-            <FormField
-              control={form.control}
-              name="content"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Content</FormLabel>
-                  <FormControl>
-                    <Input
-                      type={field.value === "text" ? "text" : "file"}
-                      placeholder="Enter or upload content"
-                      {...field}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <Button type="submit" disabled={uploading}>
-              <Upload className="mr-2 h-4 w-4" />
-              {uploading ? "Uploading..." : "Upload Content"}
-            </Button>
-          </form>
-        </Form>
+        <Button
+          onClick={handleUpload}
+          disabled={isUploading || selectedFiles.length === 0}
+          className="w-full"
+        >
+          {isUploading ? "Caricamento in corso..." : "Carica File"}
+        </Button>
       </CardContent>
     </Card>
   );

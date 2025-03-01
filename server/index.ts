@@ -8,6 +8,8 @@ import { setupVite, serveStatic, log } from "./vite";
 import { storage } from "./storage";
 import { type User } from "@shared/schema";
 import { createProxyMiddleware } from "http-proxy-middleware";
+import multer from "multer";
+import { spawn } from "child_process";
 
 // Add type definition for Express.User
 declare global {
@@ -25,7 +27,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Proxy to Python backend
+// Proxy to Python backend (existing functionality maintained)
 app.use('/api/courses/:courseId/(moodle|materials/upload)', createProxyMiddleware({
   target: 'http://localhost:5000',
   changeOrigin: true,
@@ -33,6 +35,22 @@ app.use('/api/courses/:courseId/(moodle|materials/upload)', createProxyMiddlewar
     '^/api': ''  // Remove /api prefix when forwarding to Python
   }
 }));
+
+
+// Setup multer for file uploads
+const upload = multer({ storage: multer.memoryStorage() });
+app.use('/api/courses/:courseId/upload', upload.array('files'));
+
+// Start Python server (assuming uvicorn is installed and app.py exists in backend/python)
+const pythonServer = spawn('python', ['-m', 'uvicorn', 'app:app', '--host', '0.0.0.0', '--port', '5001'], {
+  cwd: 'backend/python',
+  stdio: 'inherit' //Forward stdio to parent process for better logging
+});
+
+
+pythonServer.on('close', (code) => {
+  console.log(`Python server process exited with code ${code}`);
+});
 
 // Session setup
 app.use(session({
@@ -136,7 +154,7 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  const port = 5000;
+  const port = 3000; // Changed port to avoid conflict with potential 5000 port usage by Python
   server.listen({
     port,
     host: "0.0.0.0",

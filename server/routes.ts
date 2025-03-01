@@ -4,10 +4,15 @@ import { storage } from "./storage";
 import passport from "passport";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { insertCourseSchema, insertMaterialSchema, insertStudyPlanSchema, insertStudyTaskSchema, insertUserSchema } from "@shared/schema";
+import fetch from "node-fetch";
+import FormData from "form-data";
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+// Python server URL
+const PYTHON_SERVER_URL = "http://localhost:5001";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -206,6 +211,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.body.completed
     );
     res.json(task);
+  });
+
+  // File upload endpoint
+  app.post("/api/courses/:courseId/upload", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Forward to Python server
+      const formData = new FormData();
+      formData.append('course_id', req.params.courseId);
+      
+      // Attach all files
+      if (req.files && Array.isArray(req.files)) {
+        req.files.forEach((file) => {
+          formData.append('files', file.buffer, {
+            filename: file.originalname,
+            contentType: file.mimetype,
+          });
+        });
+      }
+      
+      const response = await fetch(`${PYTHON_SERVER_URL}/upload-materials`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.detail || 'Failed to upload files');
+      }
+      
+      // Create material entries in our database
+      const materials = [];
+      for (const material of result.materials) {
+        const newMaterial = await storage.createMaterial({
+          courseId: Number(req.params.courseId),
+          type: material.type,
+          content: material.path,
+        });
+        materials.push(newMaterial);
+      }
+      
+      res.json({ status: "success", materials });
+    } catch (error) {
+      console.error("File upload error:", error);
+      res.status(500).json({ message: "Error uploading files" });
+    }
+  });
+
+  // Moodle scraping endpoint
+  app.post("/api/courses/:courseId/moodle", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Forward to Python server
+      const formData = new FormData();
+      formData.append('moodle_url', req.body.moodle_url);
+      formData.append('username', req.body.username);
+      formData.append('password', req.body.password);
+      formData.append('course_id', req.params.courseId);
+      
+      const response = await fetch(`${PYTHON_SERVER_URL}/moodle-scrape`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.detail || 'Failed to scrape Moodle');
+      }
+      
+      // Create material entries in our database
+      const materials = [];
+      for (const material of result.materials) {
+        const newMaterial = await storage.createMaterial({
+          courseId: Number(req.params.courseId),
+          type: material.type || 'other',
+          content: material.content || material.url || JSON.stringify(material),
+        });
+        
+        // Analyze with Gemini if content is available
+        try {
+          const content = material.content || material.name || '';
+          const result = await model.generateContent(content);
+          const analysis = result.response.text();
+          const summary = await model.generateContent([content, "Summarize the key points"]).then(r => r.response.text());
+          await storage.updateMaterialAnalysis(newMaterial.id, analysis, summary);
+        } catch (error) {
+          console.error("Gemini analysis failed:", error);
+        }
+        
+        materials.push(newMaterial);
+      }
+      
+      res.json({ status: "success", materials });
+    } catch (error) {
+      console.error("Moodle scraping error:", error);
+      res.status(500).json({ message: "Error scraping Moodle" });
+    }
   });
 
   const httpServer = createServer(app);
