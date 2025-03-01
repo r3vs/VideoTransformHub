@@ -10,13 +10,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { z } from "zod";
+
+// Create a new schema without userId
+const courseFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  moodleUrl: z.string().url().optional().or(z.literal(""))
+});
+
+type CourseFormData = z.infer<typeof courseFormSchema>;
 
 export default function CreateCourse() {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const form = useForm<InsertCourse>({
-    resolver: zodResolver(insertCourseSchema.omit({ userId: true })),
+  const form = useForm<CourseFormData>({
+    resolver: zodResolver(courseFormSchema),
     defaultValues: {
       title: "",
       description: "",
@@ -24,7 +34,7 @@ export default function CreateCourse() {
     }
   });
 
-  const onSubmit = async (data: Omit<InsertCourse, "userId">) => {
+  const onSubmit = async (data: CourseFormData) => {
     try {
       // Get the current user to extract the userId
       const user = await apiRequest("GET", "/api/auth/user");
@@ -41,7 +51,7 @@ export default function CreateCourse() {
         title: "Course created",
         description: "You will be redirected to the dashboard"
       });
-
+      
       setLocation("/");
     } catch (error) {
       console.error("Error creating course:", error);
@@ -78,7 +88,6 @@ export default function CreateCourse() {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="description"
